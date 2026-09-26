@@ -45,7 +45,7 @@ function berlinZeitpunkt(datum, uhrzeit) {
 }
 const berlinDatum = (ms) => { const t = berlinTeile(ms); return `${t.year}-${t.month}-${t.day}`; };
 
-const ART = { hausaufgabe: "📚", test: "📝", aufgabe: "✅" };
+const ART = { hausaufgabe: "📚", test: "📝", aufgabe: "🏠" };
 const WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 function wannText(a, jetzt) {
   if (!a.faellig) return "";
@@ -56,7 +56,7 @@ function wannText(a, jetzt) {
   if (a.uhrzeit) t += ` um ${a.uhrzeit}`;
   return t;
 }
-const zeile = (a) => `${ART[a.art] || "✅"} ${a.titel}`;
+const zeile = (a) => `${ART[a.art] || "🏠"} ${a.titel}`;
 
 // ---------- Daten holen ----------
 const lies = async (p) => (await db.ref(p).get()).val() || {};
