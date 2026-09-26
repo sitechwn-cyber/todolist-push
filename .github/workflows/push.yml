@@ -1,0 +1,36 @@
+name: Push-Nachrichten
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # alle 15 Minuten (GitHub startet oft ein paar Minuten später)
+  workflow_dispatch:          # „Run workflow“ zum Ausprobieren von Hand
+
+concurrency:
+  group: push
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write              # für das Wachhalten unten
+
+jobs:
+  senden:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --omit=dev
+      - run: node sende.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      # GitHub schaltet Zeitpläne nach 60 Tagen ohne Änderung am Projekt ab.
+      # Das erneute „Einschalten“ über die API setzt diese Frist zurück.
+      - name: Wachhalten
+        if: always()
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/push.yml/enable" || true
+        env:
+          GH_TOKEN: ${{ github.token }}

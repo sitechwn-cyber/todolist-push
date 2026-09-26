@@ -1,0 +1,12 @@
+{
+  "name": "todolist-push",
+  "private": true,
+  "type": "module",
+  "description": "Verschickt die Push-Nachrichten der Todolist (läuft bei GitHub alle 15 Minuten)",
+  "scripts": {
+    "probe": "node sende.mjs --probe"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
+  }
+}

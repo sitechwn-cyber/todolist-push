@@ -1,0 +1,7 @@
+node_modules/
+_Gemeinsam
+# Dienstkonto-Schlüssel NIE ins Git (das Projekt ist öffentlich)
+*.json
+!package.json
+!package-lock.json
+.env
