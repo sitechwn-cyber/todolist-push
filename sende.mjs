@@ -45,7 +45,7 @@ function berlinZeitpunkt(datum, uhrzeit) {
 }
 const berlinDatum = (ms) => { const t = berlinTeile(ms); return `${t.year}-${t.month}-${t.day}`; };
 
-const ART = { hausaufgabe: "📚", test: "📝", aufgabe: "🏠" };
+const ART = { hausaufgabe: "📚", test: "📝", aufgabe: "🏠", termin: "🗓️" };
 const WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 function wannText(a, jetzt) {
   if (!a.faellig) return "";
