@@ -5,7 +5,8 @@
 // ein fein eingeschränkter Schlüssel, der nur Actions in todolist-push starten darf.
 
 async function anstossen(env) {
-  const res = await fetch(`https://api.github.com/repos/${env.REPO}/actions/workflows/push.yml/dispatches`, {
+  const repo = env.REPO || "sitechwn-cyber/todolist-push";
+  const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/push.yml/dispatches`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${env.GITHUB_TOKEN}`,

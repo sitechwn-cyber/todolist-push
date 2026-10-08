@@ -63,7 +63,12 @@ im Workflow verhindert doppelte Läufe.
   Recht „Actions: Read and write“. Läuft er ab, neuen anlegen und mit
   `CLOUDFLARE-EINRICHTEN.bat` (Schritt 3) bzw. `npx wrangler secret put GITHUB_TOKEN`
   im Ordner `cloudflare` eintragen.
-- Einrichten/Ändern: `CLOUDFLARE-EINRICHTEN.bat` (Anmeldung im Browser, Hochladen,
+- **Eingerichtet am 08.10.2026 über das Cloudflare-Dashboard** (Konto sitechwn): Worker
+  `todolist-wecker` (https://todolist-wecker.sitechwn.workers.dev zeigt nur „läuft“),
+  Cron „Every minute“. Im Dashboard steht eine einzeilige Fassung von `worker.js`
+  (Repo fest eingetragen) – inhaltlich gleich; bei Änderungen beide angleichen.
+  Secret `GITHUB_TOKEN`: Settings → Variables and secrets → Add → Typ *Secret*.
+- Alternativ per Kommandozeile: `CLOUDFLARE-EINRICHTEN.bat` (Anmeldung im Browser, Hochladen,
   Schlüssel eingeben). Yasin führt sie selbst aus – Claude gibt keine Schlüssel ein.
 - Läuft es? GitHub → Actions: Läufe mit „workflow_dispatch“ im Minutentakt;
   Cloudflare → Workers → todolist-wecker → Logs bei Fehlern.
