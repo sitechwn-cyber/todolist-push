@@ -46,6 +46,7 @@ function berlinZeitpunkt(datum, uhrzeit) {
 const berlinDatum = (ms) => { const t = berlinTeile(ms); return `${t.year}-${t.month}-${t.day}`; };
 
 const ART = { hausaufgabe: "📚", test: "📝", aufgabe: "🏠", termin: "🗓️" };
+const EINGETRAGEN = { hausaufgabe: "eine Hausaufgabe", test: "einen Test", aufgabe: "eine Aufgabe", termin: "einen Termin" };
 const WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 function wannText(a, jetzt) {
   if (!a.faellig) return "";
@@ -92,9 +93,10 @@ for (const [kind, liste] of Object.entries(aufgaben)) {
       nachrichten.push({ an: "eltern", titel: `✅ ${name} hat erledigt`, text: zeile(a), tag: "erledigt-" + id });
       merken[`${pfad}/erledigt`] = a.erledigtAm;
     }
-    // 4) Kind hat selbst einen Test eingetragen → Eltern
-    if (a.von === "kind" && a.art === "test" && !g.eingetragen && a.erstellt && jetzt - a.erstellt <= HOECHSTENS_ALT) {
-      nachrichten.push({ an: "eltern", titel: `📝 ${name} hat einen Test eingetragen`, text: a.titel + (a.faellig ? ` – ${wannText(a, jetzt)}` : ""), tag: "test-" + id });
+    // 4) Kind hat selbst etwas eingetragen (Test, Hausaufgabe, Termin …) → Eltern
+    if (a.von === "kind" && !g.eingetragen && a.erstellt && jetzt - a.erstellt <= HOECHSTENS_ALT) {
+      const was = EINGETRAGEN[a.art] || "etwas";
+      nachrichten.push({ an: "eltern", titel: `${ART[a.art] || "📌"} ${name} hat ${was} eingetragen`, text: a.titel + (a.faellig ? ` – ${wannText(a, jetzt)}` : ""), tag: "eingetragen-" + id });
       merken[`${pfad}/eingetragen`] = true;
     }
   }
