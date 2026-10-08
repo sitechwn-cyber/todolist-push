@@ -27,6 +27,12 @@ jobs:
       - run: node sende.mjs
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      # Döner-App (anderes Firebase-Projekt). Ohne Secret wird übersprungen; ein Fehler
+      # hier darf die Todolist-Nachrichten nicht aufhalten.
+      - run: node sende-doener.mjs
+        if: always()
+        env:
+          FIREBASE_SERVICE_ACCOUNT_DOENER: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DOENER }}
       # GitHub schaltet Zeitpläne nach 60 Tagen ohne Änderung am Projekt ab.
       # Das erneute „Einschalten“ über die API setzt diese Frist zurück.
       - name: Wachhalten
