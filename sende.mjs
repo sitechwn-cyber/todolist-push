@@ -1,7 +1,7 @@
 // Todolist-Push: verschickt die Push-Nachrichten der Todolist.
 // Läuft alle 15 Minuten bei GitHub (.github/workflows/push.yml).
 //
-// Liest aus der Datenbank:  erlaubt/, aufgaben/, geraete/
+// Liest aus der Datenbank:  erlaubt/, aufgaben/, geraete/, nachrichten/
 // Merkt sich Verschicktes:  push/gesendet/<kind>/<id>  (nur für dieses Skript,
 //                           die Datenbankregeln sperren es für alle Apps)
 //
@@ -61,7 +61,7 @@ const zeile = (a) => `${ART[a.art] || "🏠"} ${a.titel}`;
 
 // ---------- Daten holen ----------
 const lies = async (p) => (await db.ref(p).get()).val() || {};
-const [erlaubt, aufgaben, geraete, gesendet] = await Promise.all(["erlaubt", "aufgaben", "geraete", "push/gesendet"].map(lies));
+const [erlaubt, aufgaben, geraete, gesendet, elternPost, postGesendet] = await Promise.all(["erlaubt", "aufgaben", "geraete", "push/gesendet", "nachrichten", "push/nachrichten"].map(lies));
 const jetzt = Date.now();
 const nachrichten = []; // { an: [personKey…] | "eltern", titel, text, tag }
 const merken = {};      // Pfad unter push/gesendet → Wert
@@ -100,6 +100,22 @@ for (const [kind, liste] of Object.entries(aufgaben)) {
       merken[`${pfad}/eingetragen`] = true;
     }
   }
+}
+
+// 5) Nachricht der Eltern ans Kind (eigener Merkzettel push/nachrichten, weil
+//    push/gesendet unten nach Aufgaben aufgeräumt wird)
+const postMerken = {};
+for (const [kind, liste] of Object.entries(elternPost)) {
+  if (!erlaubt[kind]) continue;
+  for (const [id, n] of Object.entries(liste || {})) {
+    if (!n.gelesen && !(postGesendet[kind] || {})[id] && n.erstellt && jetzt - n.erstellt <= HOECHSTENS_ALT) {
+      nachrichten.push({ an: [kind], titel: "💬 Nachricht von den Eltern", text: n.text, tag: "nachricht-" + id });
+      postMerken[`${kind}/${id}`] = true;
+    }
+  }
+}
+for (const [kind, ids] of Object.entries(postGesendet)) {
+  for (const id of Object.keys(ids || {})) if (!(elternPost[kind] || {})[id]) postMerken[`${kind}/${id}`] = null;
 }
 
 // Einträge gelöschter Aufgaben aus dem Sendeplan entfernen
@@ -144,6 +160,7 @@ for (const n of nachrichten) {
 
 if (!PROBE) {
   if (Object.keys(merken).length) await db.ref("push/gesendet").update(merken);
+  if (Object.keys(postMerken).length) await db.ref("push/nachrichten").update(postMerken);
   if (Object.keys(kaputt).length) await db.ref("geraete").update(kaputt);
   await db.ref("push/letzterLauf").set(jetzt);
 }

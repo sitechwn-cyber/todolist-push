@@ -15,6 +15,7 @@ Zugang kommt ausschließlich aus dem GitHub-Secret.
 |---|---|
 | Kind | Erinnerung vor Test/Hausaufgabe/Aufgabe (Feld `erinnerung`, gleiche Rechnung wie `erinnerungenPruefen()` in der App) |
 | Kind | neue Aufgabe von den Eltern (`von: eltern`) |
+| Kind | Nachricht der Eltern (`nachrichten/<kind>/<id>`, Merkzettel `push/nachrichten`, seit 08.10.2026) |
 | Eltern | Kind hat etwas erledigt (`erledigtAm`) |
 | Eltern | Kind hat selbst etwas eingetragen – Test, Hausaufgabe oder Termin (seit 08.10.2026; vorher nur Tests) |
 
