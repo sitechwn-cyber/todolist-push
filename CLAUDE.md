@@ -78,3 +78,14 @@ im Workflow verhindert doppelte Läufe.
   Schlüssel eingeben). Yasin führt sie selbst aus – Claude gibt keine Schlüssel ein.
 - Läuft es? GitHub → Actions: Läufe mit „workflow_dispatch“ im Minutentakt;
   Cloudflare → Workers → todolist-wecker → Logs bei Fehlern.
+
+## Zweiter Versender: Döner-App (08.10.2026)
+
+`sende-doener.mjs` läuft im selben Ablauf (`push.yml`, zweiter Schritt, `if: always()`)
+und bedient das Firebase-Projekt **tekke-55b28**: neue Kundenbestellung → alle Geräte mit
+`rolle: personal`, Bestellung `fertig` → Gerät mit `rolle: kunde` dieser Bestellung. Die
+Entscheidungen stehen in `doener-logik.mjs` (reine Funktion `plane()`), Test: `node
+test-doener.mjs`. Merkzettel `push/gesendet/<orderId>` im Döner-Projekt. Eigenes Secret
+**`FIREBASE_SERVICE_ACCOUNT_DOENER`** (Dienstkonto-Schlüssel von tekke-55b28); fehlt es,
+wird der Schritt übersprungen (kein Fehler). Lokal: `FIREBASE_SERVICE_ACCOUNT_DOENER_DATEI=<Pfad>
+node sende-doener.mjs --probe`. Schlüsseldatei nie ins Git (`.gitignore` schließt `*.json` aus).
