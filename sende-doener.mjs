@@ -28,6 +28,12 @@ const lies = async (p) => (await db.ref(p).get()).val() || {};
 const [orders, geraete, staff, gesendet] = await Promise.all(["orders", "pushgeraete/doener", "staff/doener", "push/gesendet"].map(lies));
 const jetzt = Date.now();
 const { nachrichten, merken, entfernen } = plane({ orders, geraete, staff, gesendet, jetzt });
+// Statuszeile nur mit Zahlen (das Protokoll ist öffentlich: keine Namen, keine Adressen)
+{
+  const os = Object.values(orders), gs = Object.values(geraete);
+  const vonMitarbeitern = os.filter((o) => o && o.uid && staff[o.uid]).length;
+  console.log(`Döner-Stand: ${os.length} Bestellung(en) (${os.filter((o) => o && o.status === "offen").length} offen, ${os.filter((o) => o && o.status === "fertig").length} fertig, ${vonMitarbeitern} von Mitarbeitern) | Geräte: ${gs.filter((g) => g && g.rolle === "personal").length} Mitarbeiter, ${gs.filter((g) => g && g.rolle === "kunde").length} Kunden | Mitarbeiter: ${Object.keys(staff).length}`);
+}
 
 const messaging = getMessaging();
 const kaputt = new Set(entfernen);
