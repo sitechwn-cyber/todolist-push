@@ -49,3 +49,21 @@ werden aus `geraete/` entfernt.
   ausgelassen. Für Erinnerungen reicht das; auf die Minute genau ist es nicht.
 - Jede Push-Nachricht muss am Gerät sichtbar angezeigt werden (macht `sw.js`
   der Todolist) – sonst entzieht Safari am iPhone die Erlaubnis.
+
+## Cloudflare-Wecker (seit 08.10.2026): Versand jede Minute
+
+GitHub startet den 15-Minuten-Takt unzuverlässig. Deshalb stößt ein kostenloser
+**Cloudflare Worker** (`cloudflare/worker.js`, Name `todolist-wecker`, Cron jede
+Minute) den Workflow per `workflow_dispatch` an – Mitteilungen kommen damit nach
+etwa 1–2 Minuten. Der 15-Minuten-Zeitplan bleibt als Rückfall. `concurrency: push`
+im Workflow verhindert doppelte Läufe.
+
+- **Der Datenbank-Schlüssel bleibt bei GitHub.** Cloudflare kennt nur das Secret
+  `GITHUB_TOKEN`: ein *fine-grained* GitHub-Schlüssel nur für `todolist-push`, nur
+  Recht „Actions: Read and write“. Läuft er ab, neuen anlegen und mit
+  `CLOUDFLARE-EINRICHTEN.bat` (Schritt 3) bzw. `npx wrangler secret put GITHUB_TOKEN`
+  im Ordner `cloudflare` eintragen.
+- Einrichten/Ändern: `CLOUDFLARE-EINRICHTEN.bat` (Anmeldung im Browser, Hochladen,
+  Schlüssel eingeben). Yasin führt sie selbst aus – Claude gibt keine Schlüssel ein.
+- Läuft es? GitHub → Actions: Läufe mit „workflow_dispatch“ im Minutentakt;
+  Cloudflare → Workers → todolist-wecker → Logs bei Fehlern.

@@ -1,0 +1,11 @@
+# Cloudflare Worker "todolist-wecker" – siehe worker.js und CLAUDE.md
+name = "todolist-wecker"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[triggers]
+crons = ["* * * * *"]   # jede Minute
+
+[vars]
+REPO = "sitechwn-cyber/todolist-push"
+# GITHUB_TOKEN ist ein Secret: wird mit "npx wrangler secret put GITHUB_TOKEN" eingegeben, nie hier.

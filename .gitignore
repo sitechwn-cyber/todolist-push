@@ -5,3 +5,4 @@ _Gemeinsam
 !package.json
 !package-lock.json
 .env
+.wrangler/
