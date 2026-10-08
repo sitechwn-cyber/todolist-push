@@ -69,7 +69,12 @@ im Workflow verhindert doppelte Läufe.
   Cron „Every minute“. Im Dashboard steht eine einzeilige Fassung von `worker.js`
   (Repo fest eingetragen) – inhaltlich gleich; bei Änderungen beide angleichen.
   Secret `GITHUB_TOKEN`: Settings → Variables and secrets → Add → Typ *Secret*.
-- Alternativ per Kommandozeile: `CLOUDFLARE-EINRICHTEN.bat` (Anmeldung im Browser, Hochladen,
+- Alternativ per Kommandozeile: `CLOUDFLARE-EINRICHTEN.bat`
+- **Läuft seit 08.10.2026, 12:42 Uhr.** GitHub-Schlüssel `todolist-wecker` (fine-grained, ohne Ablauf).
+  Stolperstein beim Anlegen: Repository-Zugriff und Recht wurden nicht übernommen →
+  Cloudflare-Log „403 Resource not accessible by personal access token“. Prüfen unter
+  github.com/settings/personal-access-tokens → todolist-wecker: muss „Only select
+  repositories: todolist-push“ und „Actions: Read and write“ zeigen. (Anmeldung im Browser, Hochladen,
   Schlüssel eingeben). Yasin führt sie selbst aus – Claude gibt keine Schlüssel ein.
 - Läuft es? GitHub → Actions: Läufe mit „workflow_dispatch“ im Minutentakt;
   Cloudflare → Workers → todolist-wecker → Logs bei Fehlern.
