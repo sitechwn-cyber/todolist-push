@@ -1,0 +1,14 @@
+{
+  "name": "gebets-app",
+  "private": true,
+  "type": "module",
+  "description": "Gebetszeiten-App (PWA) mit Push-Erinnerungen",
+  "scripts": {
+    "test": "node test.mjs",
+    "probe": "node sende.mjs --probe",
+    "start": "npx --yes serve ."
+  },
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
+  }
+}

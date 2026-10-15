@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gebetszeiten</title>
+<meta name="description" content="Gebetszeiten, Kıble-Kompass, Erinnerungen und Gebets-Tracker">
+<meta name="theme-color" content="#0f3d2e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gebet">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="kopf">
+  <div>
+    <div class="ort" id="ortName">…</div>
+    <div class="datum" id="datumText"></div>
+    <div class="hidschri" id="hidschriText"></div>
+  </div>
+  <div class="tagwahl">
+    <button id="tagZurueck" aria-label="Vorheriger Tag">‹</button>
+    <button id="tagHeute">Heute</button>
+    <button id="tagVor" aria-label="Nächster Tag">›</button>
+  </div>
+</header>
+
+<main>
+  <!-- ZEITEN -->
+  <section id="tab-zeiten" class="seite aktiv">
+    <div class="naechstes" id="naechstesKarte">
+      <div class="klein">Nächstes Gebet</div>
+      <div class="gross" id="naechstesName">–</div>
+      <div class="zeit" id="naechstesZeit">–</div>
+      <div class="rest" id="naechstesRest">–</div>
+    </div>
+    <ul class="liste" id="zeitenListe"></ul>
+    <p class="hinweis" id="rechenHinweis"></p>
+  </section>
+
+  <!-- KIBLE -->
+  <section id="tab-kible" class="seite">
+    <div class="kompass" id="kompass">
+      <svg viewBox="-110 -110 220 220" aria-hidden="true">
+        <circle r="104" class="k-ring"/>
+        <g id="kompassRose">
+          <text y="-86" class="k-n">N</text>
+          <text x="86" class="k-w">O</text>
+          <text y="94" class="k-w">S</text>
+          <text x="-86" class="k-w">W</text>
+          <g class="k-striche"></g>
+        </g>
+        <g id="kibleZeiger">
+          <polygon points="0,-92 11,-60 0,-68 -11,-60" class="k-pfeil"/>
+          <line x1="0" y1="-60" x2="0" y2="30" class="k-linie"/>
+          <circle cy="46" r="7" class="k-pfeil"/>
+        </g>
+        <circle r="4" class="k-mitte"/>
+      </svg>
+    </div>
+    <div class="kible-info">
+      <div class="gross" id="kibleGrad">–</div>
+      <div id="kibleText" class="klein"></div>
+    </div>
+    <button class="knopf" id="kompassStart">Kompass einschalten</button>
+    <p class="hinweis" id="kibleHinweis">Halte das Handy flach und weit weg von Metall und Magneten. Ist der Pfeil oben und grün, schaust du Richtung Kaaba.</p>
+  </section>
+
+  <!-- TRACKER -->
+  <section id="tab-tracker" class="seite">
+    <div class="kacheln">
+      <div class="kachel"><div class="gross" id="trkHeute">0/5</div><div class="klein">heute</div></div>
+      <div class="kachel"><div class="gross" id="trkSerie">0</div><div class="klein">Tage in Folge</div></div>
+      <div class="kachel"><div class="gross" id="trkWoche">0%</div><div class="klein">letzte 7 Tage</div></div>
+    </div>
+    <div class="raster" id="trkRaster"></div>
+    <p class="hinweis">Tippe auf einen Punkt, um ein Gebet nachzutragen. Die Daten bleiben nur auf diesem Gerät.</p>
+  </section>
+
+  <!-- EINSTELLUNGEN -->
+  <section id="tab-einstellungen" class="seite">
+    <h2>Ort</h2>
+    <label class="feld">Stadt
+      <select id="ortAuswahl"></select>
+    </label>
+    <button class="knopf zweit" id="gpsKnopf">📍 Meinen Standort verwenden</button>
+    <p class="hinweis" id="gpsHinweis"></p>
+
+    <h2>Erinnerung</h2>
+    <label class="feld">Wie früh?
+      <select id="vorlauf">
+        <option value="0">zur Gebetszeit</option>
+        <option value="5">5 Minuten vorher</option>
+        <option value="10">10 Minuten vorher</option>
+        <option value="15">15 Minuten vorher</option>
+        <option value="30">30 Minuten vorher</option>
+      </select>
+    </label>
+    <div class="schalter-liste" id="erinnerungGebete"></div>
+    <button class="knopf" id="pushKnopf">🔔 Erinnerungen einschalten</button>
+    <p class="hinweis" id="pushHinweis"></p>
+
+    <h2>Zeiten feinabstimmen</h2>
+    <p class="hinweis">Minuten, die zur berechneten Zeit addiert werden. Voreingestellt sind die Sicherheitsminuten der Diyanet. Weicht deine Semerkand-App ab, stelle es hier nach.</p>
+    <div class="minuten" id="minutenFelder"></div>
+    <button class="knopf zweit" id="minutenZurueck">Diyanet-Werte wiederherstellen</button>
+
+    <h2>Über</h2>
+    <p class="hinweis">Die Zeiten werden direkt auf dem Gerät aus dem Sonnenstand berechnet (İmsak 18°, Yatsı 17°, İkindi einfacher Schatten, Diyanet-Sicherheitsminuten). Kein Konto, keine Werbung. In den Sommermonaten, wenn die Dämmerung in Deutschland nicht tief genug geht, wird die Nacht nach Winkel aufgeteilt.</p>
+  </section>
+</main>
+
+<nav class="leiste">
+  <button data-tab="zeiten" class="aktiv"><span>🕌</span>Zeiten</button>
+  <button data-tab="kible"><span>🧭</span>Kıble</button>
+  <button data-tab="tracker"><span>✅</span>Tracker</button>
+  <button data-tab="einstellungen"><span>⚙️</span>Mehr</button>
+</nav>
+
+<div id="toast" class="toast" role="status"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

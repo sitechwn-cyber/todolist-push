@@ -1,0 +1,16 @@
+{
+  "name": "Gebetszeiten",
+  "short_name": "Gebet",
+  "description": "Gebetszeiten, Kıble-Kompass, Erinnerungen und Gebets-Tracker",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f3d2e",
+  "theme_color": "#0f3d2e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

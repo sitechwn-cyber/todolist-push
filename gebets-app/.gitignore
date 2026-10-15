@@ -1,0 +1,7 @@
+node_modules/
+# Dienstkonto-Schlüssel NIE ins Git
+*.json
+!package.json
+!package-lock.json
+!database.rules.json
+.env
