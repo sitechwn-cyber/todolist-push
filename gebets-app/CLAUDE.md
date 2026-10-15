@@ -25,13 +25,18 @@ statischen Hosting (GitHub Pages, Cloudflare Pages, Firebase Hosting).
 
 ## Gebetszeiten (Diyanet-Art wie Semerkand)
 
-İmsak 18°, Yatsı 17°, İkindi einfacher Schatten, Güneş/Akşam bei 0,833°. Dazu die
-**Sicherheitsminuten der Diyanet** (`DIYANET_MINUTEN`: Güneş −7, Öğle +5, İkindi +4, Akşam +7).
-Im Sommer erreicht die Dämmerung in Deutschland den Winkel nicht → die Nacht wird nach Winkel/60
-aufgeteilt („angle based“). **Diese Werte sind aus der Formel hergeleitet und noch nicht gegen die
-Semerkand-App abgeglichen.** Abgleich: einen Tag in Semerkand und hier vergleichen; Abweichungen pro
-Gebet in der App unter *Mehr → Zeiten feinabstimmen* einstellen und dann die Standardwerte in
-`DIYANET_MINUTEN` anpassen. Test: `npm test`.
+Die Zeiten werden aus dem Sonnenstand berechnet (kein Internet, keine API): İmsak 18°, Yatsı 17°,
+İkindi einfacher Schatten, Güneş/Akşam bei 0,833°, dazu feste Korrekturminuten (`DIYANET_MINUTEN`:
+Güneş −7, Öğle +6, İkindi +5, Akşam +9, Yatsı +2). Im Sommer erreicht die Dämmerung in Deutschland den
+Winkel nicht → die Nacht wird nach Winkel/60 aufgeteilt („angle based“).
+
+**Stand des Abgleichs (15.10.2026):** Die Minutenwerte sind auf eine echte Wochentabelle abgestimmt
+(İstanbul, 15.–21.10.2026, Datei `namaz-vakitleri-haftalik.xls` vom Nutzer): alle 42 Werte stimmen auf
+±1 Minute, geprüft in `test.mjs`. **Noch nicht geprüft:** deutsche Orte (z. B. Waiblingen), Sommer und
+Winter. Ob die Tabelle von Semerkand oder von der Diyanet stammt, ist offen – die Quelle der
+Semerkand-App selbst ist nicht belegt. Nächster Abgleich: eine Woche für Waiblingen (Sommer und Winter)
+in Semerkand ansehen, in `test.mjs` ergänzen und bei Abweichung die Minuten/Sommerregel anpassen.
+Pro Gerät lässt sich nachstellen unter *Mehr → Zeiten feinabstimmen*.
 
 ## Lokal ansehen
 

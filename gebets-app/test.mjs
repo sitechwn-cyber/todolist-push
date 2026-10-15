@@ -7,16 +7,18 @@ const min = (ms, zone) => { const [h, m] = uhrzeit(ms, zone).split(":").map(Numb
 const nahe = (ist, soll, tol, text) => assert.ok(Math.abs(ist - soll) <= tol, `${text}: ${ist} statt ~${soll}`);
 const hm = (s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
 
-// Referenzwerte (echte Sonnenaufgänge/-untergänge, Diyanet-Minuten abgezogen/addiert), Toleranz 4 Min.
+// Referenz: echte Wochentabelle (İstanbul, 15.–21.10.2026, Datei vom Nutzer), Abweichung ≤ 1 Min.
 {
-  const z = berechne({ y: 2026, m: 10, d: 15 }, 41.01, 28.98); // Istanbul
-  nahe(min(z.gunes, "Europe/Istanbul"), hm("07:08"), 4, "Istanbul Güneş");
-  nahe(min(z.aksam, "Europe/Istanbul"), hm("18:30"), 4, "Istanbul Akşam");
-}
-{
-  const z = berechne({ y: 2026, m: 10, d: 15 }, 48.83, 9.32); // Waiblingen
-  nahe(min(z.aksam, "Europe/Berlin"), hm("18:40"), 4, "Waiblingen Akşam");
-  nahe(min(z.ogle, "Europe/Berlin"), hm("13:13"), 4, "Waiblingen Öğle");
+  const tabelle = {
+    15: ["05:44", "07:08", "12:55", "16:00", "18:32", "19:51"], 16: ["05:45", "07:09", "12:55", "15:58", "18:30", "19:49"],
+    17: ["05:46", "07:10", "12:55", "15:57", "18:29", "19:48"], 18: ["05:47", "07:11", "12:54", "15:56", "18:27", "19:47"],
+    19: ["05:48", "07:13", "12:54", "15:55", "18:26", "19:45"], 20: ["05:49", "07:14", "12:54", "15:54", "18:24", "19:44"],
+    21: ["05:50", "07:15", "12:54", "15:53", "18:23", "19:42"],
+  };
+  for (const [d, soll] of Object.entries(tabelle)) {
+    const z = berechne({ y: 2026, m: 10, d: +d }, 41.01, 28.98);
+    GEBETE.forEach((g, i) => nahe(min(z[g.id], "Europe/Istanbul"), hm(soll[i]), 1, `İstanbul ${d}.10. ${g.name}`));
+  }
 }
 
 // Reihenfolge und Plausibilität über das ganze Jahr, auch Sommer in hohen Breiten

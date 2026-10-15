@@ -12,9 +12,9 @@ export const GEBETE = [
   { id: "yatsi", name: "Yatsı", deutsch: "Nacht", arabisch: "العشاء", taeglich: true },
 ];
 
-// Sicherheitsminuten der Diyanet (Zeit „Güneş“ früher, die anderen später), damit die Zeiten
-// zu denen der Semerkand-/Diyanet-Kalender passen. In den Einstellungen pro Gebet änderbar.
-export const DIYANET_MINUTEN = { imsak: 0, gunes: -7, ogle: 5, ikindi: 4, aksam: 7, yatsi: 0 };
+// Sicherheitsminuten (Temkin), abgestimmt auf eine echte Wochentabelle (İstanbul, 15.–21.10.2026): Abweichung ≤ 1 Min.
+// Nur an einer Woche und einem Ort geprüft – siehe CLAUDE.md. In den Einstellungen pro Gebet änderbar.
+export const DIYANET_MINUTEN = { imsak: 0, gunes: -7, ogle: 6, ikindi: 5, aksam: 9, yatsi: 2 };
 
 const WINKEL = { imsak: 18, yatsi: 17, horizont: 0.833 };
 
