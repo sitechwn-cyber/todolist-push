@@ -16,6 +16,13 @@ export const GEBETE = [
 // Nur an einer Woche und einem Ort geprüft – siehe CLAUDE.md. In den Einstellungen pro Gebet änderbar.
 export const DIYANET_MINUTEN = { imsak: 0, gunes: -7, ogle: 6, ikindi: 5, aksam: 9, yatsi: 2 };
 
+/** Rechen-Minuten + persönliche Korrektur (Minuten pro Gebet) zusammenzählen. */
+export function minutenMit(korrektur = {}) {
+  const aus = {};
+  for (const g of GEBETE) aus[g.id] = (DIYANET_MINUTEN[g.id] || 0) + (korrektur[g.id] || 0);
+  return aus;
+}
+
 const WINKEL = { imsak: 18, yatsi: 17, horizont: 0.833 };
 
 const rad = (d) => (d * Math.PI) / 180;
@@ -115,11 +122,25 @@ export function uhrzeit(ms, zone) {
   return `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
 }
 
-/** Nächstes Gebet ab `jetzt` (heute, sonst İmsak von morgen). */
-export function naechstes(jetzt, breite, laenge, zone, minuten) {
+/** Zeitpunkt (ms, UTC) einer Uhrzeit „HH:MM“ am Kalendertag `tag` in der Zeitzone `zone`. */
+export function lokalZuMs(tag, hhmm, zone) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const roh = Date.UTC(tag.y, tag.m - 1, tag.d, h, m);
+  const versatz = (ms) => { const p = teile(ms, zone); return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - Math.floor(ms / 60000) * 60000; };
+  let ms = roh - versatz(roh);
+  const v2 = versatz(ms);
+  if (roh - v2 !== ms) ms = roh - v2;
+  return ms;
+}
+
+/**
+ * Nächstes Gebet ab `jetzt` (heute, sonst İmsak von morgen).
+ * @param {(tag:{y,m,d}) => Object<string,number>} holen  liefert die Zeiten eines Tages (Referenz oder Berechnung)
+ */
+export function naechstes(jetzt, zone, holen) {
   const heute = tagVon(jetzt, zone);
   for (const tag of [heute, tagPlus(heute, 1)]) {
-    const z = berechne(tag, breite, laenge, minuten);
+    const z = holen(tag);
     for (const g of GEBETE) if (z[g.id] > jetzt) return { gebet: g, zeit: z[g.id], tag };
   }
   return null;

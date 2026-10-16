@@ -2,7 +2,8 @@
 //
 // Liest:   geraete/        (schreibt die App: Push-Adresse, Ort, Einstellungen pro Gerät)
 // Merkt:   push/gesendet/<geraeteId>/<datum>-<gebet>  (nur für dieses Skript, in den Regeln gesperrt)
-// Die Entscheidungen stehen in plane-push.mjs (getestet mit test-plane.mjs).
+// Die Entscheidungen stehen in plane-push.mjs (getestet mit test.mjs), die Zeiten kommen von der
+// Diyanet-Referenz (referenz.js) oder – ohne Referenz-Ort/bei Fehler – aus der Berechnung (gebetszeiten.js).
 //
 // Zugang: Dienstkonto-Schlüssel von Firebase als GitHub-Secret FIREBASE_SERVICE_ACCOUNT.
 // Datenbank-Adresse als GitHub-Variable/Secret FIREBASE_DATABASE_URL (oder in config.js: databaseURL).
@@ -13,7 +14,8 @@ import { readFileSync } from "node:fs";
 import { initializeApp, cert } from "firebase-admin/app";
 import { getDatabase } from "firebase-admin/database";
 import { getMessaging } from "firebase-admin/messaging";
-import { plane } from "./plane-push.mjs";
+import { plane, benoetigteOrte } from "./plane-push.mjs";
+import { holeVakitler } from "./referenz.js";
 import { FIREBASE } from "./config.js";
 
 const PROBE = process.argv.includes("--probe");
@@ -28,9 +30,14 @@ const db = getDatabase();
 const lies = async (p) => (await db.ref(p).get()).val() || {};
 const [geraete, gesendet] = await Promise.all(["geraete", "push/gesendet"].map(lies));
 const jetzt = Date.now();
-const { nachrichten, merken } = plane({ geraete, gesendet, jetzt });
+// Referenztabellen (Diyanet) je Ort holen; schlägt es fehl, rechnet plane() für dieses Gerät selbst.
+const tabellen = {};
+for (const ilce of benoetigteOrte(geraete)) {
+  try { tabellen[ilce] = await holeVakitler(ilce); } catch (e) { console.warn("Referenz nicht erreichbar, es wird berechnet:", e.message); }
+}
+const { nachrichten, merken } = plane({ geraete, gesendet, jetzt, tabellen });
 // Das Protokoll ist öffentlich: nur Zahlen, keine Orte, keine Adressen.
-console.log(`Geräte: ${Object.keys(geraete).length}`);
+console.log(`Geräte: ${Object.keys(geraete).length}, Referenztabellen: ${Object.keys(tabellen).length}`);
 
 const messaging = getMessaging();
 const kaputt = {};

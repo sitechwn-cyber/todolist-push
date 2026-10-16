@@ -13,7 +13,8 @@ statischen Hosting (GitHub Pages, Cloudflare Pages, Firebase Hosting).
 
 | Datei | Aufgabe |
 |---|---|
-| `gebetszeiten.js` | Rechenkern: Gebetszeiten aus dem Sonnenstand, Kıble, Zeitzonen-Hilfen. Läuft im Browser **und** bei GitHub – eine Quelle, dieselben Zeiten |
+| `referenz.js` | **Referenz: Diyanet-Zeiten** über `ezanvakti.emushaf.net` (Länder/Städte/Orte, Tagestabelle), `tagesZeiten()` = Referenz, sonst Berechnung |
+| `gebetszeiten.js` | Rückfall-Rechenkern (Sonnenstand), Kıble, Zeitzonen-Hilfen. Läuft im Browser **und** bei GitHub |
 | `app.js`, `index.html`, `app.css` | Oberfläche (4 Tabs: Zeiten, Kıble, Tracker, Mehr) |
 | `config.js` | Firebase-Web-Konfiguration + VAPID-Schlüssel (öffentlich, leer = kein Push) |
 | `sw.js` | Offline-Speicher + Push-Nachrichten anzeigen |
@@ -21,38 +22,43 @@ statischen Hosting (GitHub Pages, Cloudflare Pages, Firebase Hosting).
 | `sende.mjs` | Liest `geraete/`, verschickt per Firebase Cloud Messaging, merkt Verschicktes |
 | `.github/workflows/push.yml` | Startet `sende.mjs` alle 5 Minuten (+ von Hand) |
 | `database.rules.json` | Datenbankregeln: Geräte dürfen nur ihren eigenen Eintrag schreiben, niemand liest |
-| `test.mjs` | `npm test` prüft Zeiten, Kıble und Versandplanung |
+| `test.mjs` | `npm test` prüft Referenz-Lesen, Rückfall, Kıble und Versandplanung |
+| `referenz-pruefen.mjs` | **Auf dem PC mit Internet ausführen:** Schnittstelle prüfen, Orte suchen (`npm run referenz -- --suche Stuttgart`), mit Tabelle vergleichen |
+| `referenz/` | Echte Wochentabellen des Nutzers zum Abgleich (siehe README dort) |
 
-## Gebetszeiten (Diyanet-Art wie Semerkand)
+## Gebetszeiten: Referenz Diyanet, Rückfall Berechnung
 
-Die Zeiten werden aus dem Sonnenstand berechnet (kein Internet, keine API): İmsak 18°, Yatsı 17°,
-İkindi einfacher Schatten, Güneş/Akşam bei 0,833°, dazu feste Korrekturminuten (`DIYANET_MINUTEN`:
-Güneş −7, Öğle +6, İkindi +5, Akşam +9, Yatsı +2). Im Sommer erreicht die Dämmerung in Deutschland den
-Winkel nicht → die Nacht wird nach Winkel/60 aufgeteilt („angle based“).
+**Referenz (Standard, seit 16.10.2026):** In der App unter *Mehr → Diyanet-Zeiten* Land → Stadt → Ort wählen
+(Deutschland ist vorgewählt). Die App holt die Tagestabelle von `https://ezanvakti.emushaf.net/vakitler/<IlceID>`
+(Felder `MiladiTarihKisa`, `Imsak`, `Gunes`, `Ogle`, `Ikindi`, `Aksam`, `Yatsi`), speichert sie im Gerät (6 Std
+frisch, auch offline nutzbar) und zeigt genau diese Zeiten. Auch `sende.mjs` holt dieselbe Tabelle für die
+Erinnerungen (Gerät speichert `diyanet: {ilce, zone}` in `geraete/`). Persönliche Minuten (*Feinabstimmen*)
+kommen immer obendrauf, Standard 0.
 
-**Stand des Abgleichs (15.10.2026):** Die Minutenwerte sind auf eine echte Wochentabelle abgestimmt
-(İstanbul, 15.–21.10.2026, Datei `namaz-vakitleri-haftalik.xls` vom Nutzer): alle 42 Werte stimmen auf
-±1 Minute, geprüft in `test.mjs`. **Noch nicht geprüft:** deutsche Orte (z. B. Waiblingen), Sommer und
-Winter. Ob die Tabelle von Semerkand oder von der Diyanet stammt, ist offen – die Quelle der
-Semerkand-App selbst ist nicht belegt. Nächster Abgleich: eine Woche für Waiblingen (Sommer und Winter)
-in Semerkand ansehen, in `test.mjs` ergänzen und bei Abweichung die Minuten/Sommerregel anpassen.
-Pro Gerät lässt sich nachstellen unter *Mehr → Zeiten feinabstimmen*.
+**Rückfall:** Fehlt der Ort, das Internet oder der Tag, rechnet `gebetszeiten.js` aus dem Sonnenstand (İmsak 18°,
+Yatsı 17°, İkindi einfacher Schatten, Korrekturminuten `DIYANET_MINUTEN`: Güneş −7, Öğle +6, İkindi +5,
+Akşam +9, Yatsı +2; Sommer: Nacht nach Winkel/60). Das ist nur eine Näherung: İstanbul passt auf ±1 Min
+(`test.mjs`), in Süddeutschland liegt İmsak ca. 5 Min zu spät (Diyanet ≈ 18,8°) – Details unten.
 
-## Offener Stand (16.10.2026) – hier weitermachen
+### ⚠ Noch nicht gegen die echte Schnittstelle geprüft
+Die Cloud-Umgebung, in der das gebaut wurde, hatte kein Internet zu `ezanvakti.emushaf.net`. Adressen, Feldnamen
+und das Datumsformat sind nach bestem Wissen umgesetzt und mit einer nachgebauten Antwort getestet
+(`test.mjs`, Browsertest). **Als Erstes auf dem PC prüfen:**
+1. `npm run referenz -- --suche Stuttgart` (Ort und IlceID finden; Schnittstelle erreichbar?)
+2. `npm run referenz -- <IlceID> referenz/deutschland-ort-unklar-2026-10-15.csv` – muss „✔ alle Werte gleich“
+   melden, sonst stimmt Ort oder Datenquelle nicht.
+3. Im Browser: läuft der Abruf, oder blockiert CORS die Anfrage? Dann liefert die App die berechneten Zeiten und
+   zeigt „konnten nicht geladen werden“. Abhilfe: Cloudflare-Worker als Zwischenstation (siehe Projekt
+   `todolist-push/cloudflare`) oder eine andere Diyanet-Quelle in `referenz.js` eintragen.
+4. Ob die Tabellen des Nutzers (`referenz/`) von der Diyanet oder von Semerkand stammen, ist offen; die Semerkand-
+   Seite war nicht erreichbar. Auf dem PC (Chrome mit der Seite offen) die Zeiten ablesen und mit der Schnittstelle
+   vergleichen.
 
-Die zweite Tabelle (`referenz/deutschland-ort-unklar-2026-10-15.csv`, Süddeutschland, 15.–21.10.2026) weicht
-von der Berechnung mit den Waiblingen-Koordinaten (48,83° N / 9,32° O) deutlich ab:
-- **Ort:** Bester Fit etwa 48,75° N / 9,90° O (Restabweichung < 1 Min), nicht Waiblingen. Passt zur Gegend
-  Schwäbisch Gmünd / Göppingen / Aalen. **Offene Frage an den Nutzer: welche Stadt war beim Export gewählt?**
-- **İmsak:** In dieser Tabelle liegt er ca. 5 Min früher als mit 18° (am Fit-Ort passt ≈ 18,8°, alle 7 Tage ±1 Min).
-  In İstanbul passte 18°. Ursache unbekannt (eigene Regel für Deutschland? Breitengrad?).
-- **Yatsı 17°** und die Korrekturminuten (Güneş −7, Öğle +6, İkindi +5, Akşam +9, Yatsı +2) passen auch hier.
-- **Fehlt noch:** eine Juni-Woche (Sommerregel für kurze Nächte) und optional Dezember/Januar für denselben Ort.
-  Erst damit klären, ob İmsak ein fester Winkel, eine Minutenkorrektur oder eine Breitengrad-Regel ist.
-- **Quelle von Semerkand ist nicht belegt.** Die Seite semerkandtakvimi.com war aus der Cloud-Umgebung nicht
-  erreichbar (Netzwerkrichtlinie). Auf dem PC: dort nach einer Methodenangabe suchen (FAQ, Einstellungen der App).
-- Noch nicht ausprobiert: Wochentabellen direkt von der Semerkand-Seite abrufen (Orte, Monate), dann
-  automatisch gegen `berechne()` vergleichen.
+### Befunde zur Berechnung (Stand 16.10.2026)
+- Zweite Tabelle (`referenz/deutschland-ort-unklar-2026-10-15.csv`, Süddeutschland): bester Fit 48,75° N /
+  9,90° O (nicht Waiblingen; Gegend Schwäbisch Gmünd/Göppingen/Aalen), İmsak ≈ 18,8°, Yatsı 17° und die
+  Korrekturminuten passen. Ort der Tabelle: **offen** (Nutzer fragen).
+- Fehlt: Juni-Woche (Sommerregel) und Dezember/Januar für denselben Ort.
 
 ## Lokal ansehen
 
@@ -100,4 +106,5 @@ gefragt).
 - Der Ort wird auf 2 Nachkommastellen (~1 km) gerundet in `geraete/` gespeichert; die Datenbank ist für
   Besucher nicht lesbar. Das GitHub-Protokoll zeigt nur Zahlen, keine Orte.
 - Die Hidschri-Zeile nutzt den Umm-al-Qura-Kalender des Browsers; die Diyanet kann um einen Tag abweichen.
-- Zeitplan und Gebetszeiten rechnen mit der Zeitzone des gewählten Ortes (`zone`), nicht des Geräts.
+- Zeitplan und Gebetszeiten rechnen mit der Zeitzone des gewählten Ortes (`zone`; beim Diyanet-Ort nach Land: Almanya → Europe/Berlin, Türkiye → Europe/Istanbul u. a., sonst Gerätezeitzone), nicht des Geräts.
+- Die Hidschri-Zeile der Diyanet-Tabelle (`HicriTarihUzun`) wird noch nicht genutzt.

@@ -1,4 +1,5 @@
-import { GEBETE, DIYANET_MINUTEN, berechne, naechstes, tagVon, tagPlus, tagSchluessel, uhrzeit, kibleRichtung, kibleEntfernung } from "./gebetszeiten.js";
+import { GEBETE, naechstes, tagVon, tagPlus, tagSchluessel, uhrzeit, kibleRichtung, kibleEntfernung } from "./gebetszeiten.js";
+import { tagesZeiten, holeVakitler, holeLaender, holeStaedte, holeOrte } from "./referenz.js";
 import { FIREBASE, VAPID_KEY } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -25,12 +26,12 @@ const lesen = (k, ersatz) => { try { return JSON.parse(localStorage.getItem(k)) 
 const schreiben = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* privater Modus */ } };
 
 const standard = () => ({
-  ort: ORTE[0], minuten: { ...DIYANET_MINUTEN }, vorlauf: 10, erinnerungAn: false,
+  ort: ORTE[0], diyanet: null, korrektur: Object.fromEntries(GEBETE.map((g) => [g.id, 0])), vorlauf: 10, erinnerungAn: false,
   gebete: { imsak: true, gunes: false, ogle: true, ikindi: true, aksam: true, yatsi: true },
   id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2)).replace(/-/g, "").slice(0, 24),
 });
 let S = { ...standard(), ...lesen("gebet.einstellungen", {}) };
-S.minuten = { ...DIYANET_MINUTEN, ...S.minuten };
+S.korrektur = { ...standard().korrektur, ...S.korrektur };
 S.gebete = { ...standard().gebete, ...S.gebete };
 const speichern = () => schreiben("gebet.einstellungen", S);
 speichern();
@@ -52,16 +53,24 @@ for (const b of document.querySelectorAll(".leiste button")) {
 }
 
 // ---------- Zeiten ----------
+const zone = () => (S.diyanet && S.diyanet.zone) || S.ort.zone;
+const ortName = () => (S.diyanet && S.diyanet.name) || S.ort.name;
+// Referenztabelle der Diyanet (zuletzt geladen, auch offline nutzbar); fehlt ein Tag → eigene Berechnung
+let refTabelle = lesen("gebet.referenz", {});
+let refFehler = null;
+const tabelle = () => (S.diyanet && refTabelle.ilce === S.diyanet.ilce ? refTabelle.tage : undefined);
+const tagZeiten = (tag) => tagesZeiten({ tag, zone: zone(), breite: S.ort.lat, laenge: S.ort.lon, korrektur: S.korrektur, tabelle: tabelle() });
+
 let tagVersatz = 0; // 0 = heute
-const heuteAmOrt = () => tagVon(Date.now(), S.ort.zone);
+const heuteAmOrt = () => tagVon(Date.now(), zone());
 const gezeigterTag = () => tagPlus(heuteAmOrt(), tagVersatz);
 
 function zeichneZeiten() {
   const jetzt = Date.now();
   const tag = gezeigterTag();
-  const z = berechne(tag, S.ort.lat, S.ort.lon, S.minuten);
-  const nae = naechstes(jetzt, S.ort.lat, S.ort.lon, S.ort.zone, S.minuten);
-  $("ortName").textContent = S.ort.name;
+  const { zeiten: z, quelle } = tagZeiten(tag);
+  const nae = naechstes(jetzt, zone(), (t) => tagZeiten(t).zeiten);
+  $("ortName").textContent = ortName();
   $("datumText").textContent = new Date(Date.UTC(tag.y, tag.m - 1, tag.d, 12)).toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   try {
     $("hidschriText").textContent = new Intl.DateTimeFormat("de-DE-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(Date.UTC(tag.y, tag.m - 1, tag.d, 12));
@@ -75,19 +84,24 @@ function zeichneZeiten() {
     const istNaechstes = nae && nae.gebet.id === g.id && tagSchluessel(nae.tag) === schluessel;
     return `<li class="${vorbei ? "vorbei" : ""} ${istNaechstes ? "jetzt" : ""}">
       <div class="namen"><div class="name">${g.name} <span class="unter">${g.arabisch}</span></div><div class="unter">${g.deutsch}</div></div>
-      <div class="zeit">${uhrzeit(z[g.id], S.ort.zone)}</div>
+      <div class="zeit">${uhrzeit(z[g.id], zone())}</div>
       <button class="haken ${g.taeglich ? "" : "leer"} ${erledigt[g.id] ? "an" : ""}" data-g="${g.id}" aria-label="${g.name} verrichtet">${erledigt[g.id] ? "✓" : ""}</button>
     </li>`;
   }).join("");
-  $("rechenHinweis").textContent = `Berechnet für ${S.ort.name} (${S.ort.lat.toFixed(2)}° N, ${S.ort.lon.toFixed(2)}° O). Kleine Abweichungen zur Diyanet möglich – Feinabstimmung unter „Mehr“.`;
+  const fehler = refFehler ? " Die Diyanet-Zeiten konnten nicht geladen werden (" + refFehler + ")." : "";
+  $("rechenHinweis").textContent = quelle === "diyanet"
+    ? `Quelle: Diyanet (${S.diyanet.name}).${fehler}`
+    : S.diyanet
+      ? `Für diesen Tag liegen keine Diyanet-Zeiten vor, die Zeit ist berechnet (Näherung).${fehler}`
+      : `Berechnet für ${S.ort.name} (${S.ort.lat.toFixed(2)}° N, ${S.ort.lon.toFixed(2)}° O) – eine Näherung. Genau wie bei der Diyanet: unter „Mehr“ einen Diyanet-Ort wählen.`;
   zeichneNaechstes();
 }
 
 function zeichneNaechstes() {
-  const nae = naechstes(Date.now(), S.ort.lat, S.ort.lon, S.ort.zone, S.minuten);
+  const nae = naechstes(Date.now(), zone(), (t) => tagZeiten(t).zeiten);
   if (!nae) return;
   $("naechstesName").textContent = nae.gebet.name;
-  $("naechstesZeit").textContent = uhrzeit(nae.zeit, S.ort.zone);
+  $("naechstesZeit").textContent = uhrzeit(nae.zeit, zone());
   const rest = Math.max(0, Math.round((nae.zeit - Date.now()) / 1000));
   const h = Math.floor(rest / 3600), m = Math.floor((rest % 3600) / 60), s = rest % 60;
   $("naechstesRest").textContent = `in ${h ? h + " Std " : ""}${String(m).padStart(h ? 2 : 1, "0")} Min ${String(s).padStart(2, "0")} Sek`;
@@ -184,12 +198,14 @@ function zeichneEinstellungen() {
   $("ortAuswahl").value = eigen ? "eigen" : String(ORTE.findIndex((o) => o.name === S.ort.name));
   $("vorlauf").value = String(S.vorlauf);
   $("erinnerungGebete").innerHTML = GEBETE.map((g) => `<label><input type="checkbox" data-g="${g.id}" ${S.gebete[g.id] ? "checked" : ""}> ${g.name}</label>`).join("");
-  $("minutenFelder").innerHTML = GEBETE.map((g) => `<label>${g.name}<input type="number" step="1" min="-30" max="30" data-g="${g.id}" value="${S.minuten[g.id] || 0}"></label>`).join("");
+  $("minutenFelder").innerHTML = GEBETE.map((g) => `<label>${g.name}<input type="number" step="1" min="-30" max="30" data-g="${g.id}" value="${S.korrektur[g.id] || 0}"></label>`).join("");
+  $("dStatus").textContent = S.diyanet ? `Aktiv: ${S.diyanet.name}` : "Noch kein Diyanet-Ort gewählt – die Zeiten sind berechnet.";
+  $("dEntfernen").style.display = S.diyanet ? "block" : "none";
   zeichnePushStatus();
 }
 $("ortAuswahl").onchange = (e) => {
   if (e.target.value === "eigen") return;
-  S.ort = ORTE[+e.target.value]; aenderung();
+  S.ort = ORTE[+e.target.value]; aenderung(); // Diyanet-Ort bleibt (andere Zeitzone/Ort nur für Kıble und Rückfall)
 };
 $("gpsKnopf").onclick = () => {
   if (!navigator.geolocation) { $("gpsHinweis").textContent = "Standort wird von diesem Gerät nicht unterstützt."; return; }
@@ -203,9 +219,69 @@ $("gpsKnopf").onclick = () => {
 $("vorlauf").onchange = (e) => { S.vorlauf = +e.target.value; aenderung(); };
 $("erinnerungGebete").addEventListener("change", (e) => { if (e.target.dataset.g) { S.gebete[e.target.dataset.g] = e.target.checked; aenderung(); } });
 $("minutenFelder").addEventListener("change", (e) => {
-  if (e.target.dataset.g) { S.minuten[e.target.dataset.g] = Math.max(-30, Math.min(30, Math.round(+e.target.value) || 0)); aenderung(); }
+  if (e.target.dataset.g) { S.korrektur[e.target.dataset.g] = Math.max(-30, Math.min(30, Math.round(+e.target.value) || 0)); aenderung(); }
 });
-$("minutenZurueck").onclick = () => { S.minuten = { ...DIYANET_MINUTEN }; aenderung(); zeichneEinstellungen(); };
+$("minutenZurueck").onclick = () => { S.korrektur = { ...standard().korrektur }; aenderung(); zeichneEinstellungen(); };
+
+// ---------- Diyanet-Ort wählen und Referenzzeiten laden ----------
+const ZONEN = { "ALMANYA": "Europe/Berlin", "TÜRKİYE": "Europe/Istanbul", "TURKIYE": "Europe/Istanbul", "AVUSTURYA": "Europe/Vienna", "İSVİÇRE": "Europe/Zurich", "HOLLANDA": "Europe/Amsterdam", "FRANSA": "Europe/Paris", "BELÇİKA": "Europe/Brussels", "İNGİLTERE": "Europe/London", "SUUDİ ARABİSTAN": "Asia/Riyadh" };
+async function liste(art, id) {
+  const k = `gebet.liste.${art}.${id ?? ""}`;
+  const c = lesen(k, null);
+  if (c && c.length) return c;
+  const l = art === "land" ? await holeLaender() : art === "stadt" ? await holeStaedte(id) : await holeOrte(id);
+  schreiben(k, l);
+  return l;
+}
+const fuelle = (sel, l, leer) => { $(sel).innerHTML = `<option value="">${leer}</option>` + l.map((x) => `<option value="${x.id}">${x.name}</option>`).join(""); };
+const gewaehlt = (sel) => { const o = $(sel).selectedOptions[0]; return o && o.value ? { id: o.value, name: o.textContent } : null; };
+async function diyanetFuellen(stufe) {
+  try {
+    $("dStatus").textContent = "Lade Liste …";
+    if (stufe === "land") {
+      const l = await liste("land");
+      fuelle("dLand", l, "Land wählen");
+      const de = l.find((x) => /^almanya$/i.test(x.name));
+      if (de) { $("dLand").value = de.id; await diyanetFuellen("stadt"); return; }
+    } else if (stufe === "stadt") {
+      const land = gewaehlt("dLand");
+      fuelle("dStadt", land ? await liste("stadt", land.id) : [], "Stadt wählen"); fuelle("dOrt", [], "Ort wählen");
+    } else {
+      const stadt = gewaehlt("dStadt");
+      fuelle("dOrt", stadt ? await liste("ort", stadt.id) : [], "Ort wählen");
+    }
+    zeichneEinstellungen();
+  } catch (e) {
+    $("dStatus").textContent = "Die Diyanet-Liste konnte nicht geladen werden (" + (e.message || e) + "). Internet nötig.";
+  }
+}
+$("dLand").onchange = () => diyanetFuellen("stadt");
+$("dStadt").onchange = () => diyanetFuellen("ort");
+$("dOrt").onchange = async () => {
+  const ort = gewaehlt("dOrt"), land = gewaehlt("dLand"), stadt = gewaehlt("dStadt");
+  if (!ort) return;
+  const name = stadt && stadt.name !== ort.name ? `${stadt.name} · ${ort.name}` : ort.name;
+  S.diyanet = { ilce: +ort.id, name, zone: ZONEN[(land.name || "").toLocaleUpperCase("tr")] || Intl.DateTimeFormat().resolvedOptions().timeZone };
+  speichern(); zeichneEinstellungen(); tagVersatz = 0;
+  await referenzLaden(true); syncGeraet();
+};
+$("dEntfernen").onclick = () => { S.diyanet = null; speichern(); zeichneEinstellungen(); zeichneZeiten(); syncGeraet(); };
+let dGeladen = false;
+$("dLand").addEventListener("focus", () => { if (!dGeladen) { dGeladen = true; diyanetFuellen("land"); } }, { once: true });
+
+async function referenzLaden(erzwingen = false) {
+  if (!S.diyanet) { refFehler = null; return; }
+  const frisch = refTabelle.ilce === S.diyanet.ilce && Date.now() - (refTabelle.abgerufen || 0) < 6 * 3600000;
+  if (frisch && !erzwingen) return;
+  try {
+    const tage = await holeVakitler(S.diyanet.ilce);
+    if (!Object.keys(tage).length) throw new Error("keine Zeiten erhalten");
+    refTabelle = { ilce: S.diyanet.ilce, abgerufen: Date.now(), tage };
+    schreiben("gebet.referenz", refTabelle);
+    refFehler = null;
+  } catch (e) { refFehler = e.message || String(e); }
+  zeichneZeiten();
+}
 
 function aenderung() {
   speichern(); zeichneZeiten(); zeichneKible(); syncGeraet();
@@ -235,7 +311,8 @@ async function syncGeraet() {
     await fb.db.ref("geraete/" + S.id).set({
       token: fb.token,
       lat: +S.ort.lat.toFixed(2), lon: +S.ort.lon.toFixed(2), zone: S.ort.zone,
-      vorlauf: S.vorlauf, gebete: S.gebete, minuten: S.minuten, aktualisiert: Date.now(),
+      vorlauf: S.vorlauf, gebete: S.gebete, korrektur: S.korrektur, aktualisiert: Date.now(),
+      ...(S.diyanet ? { diyanet: { ilce: S.diyanet.ilce, zone: S.diyanet.zone } } : {}),
     });
   } catch (e) { console.warn("Sync fehlgeschlagen", e); }
 }
@@ -283,7 +360,7 @@ async function lokalPruefen() {
   const jetzt = Date.now();
   const heute = heuteAmOrt();
   for (const tag of [heute, tagPlus(heute, 1)]) {
-    const z = berechne(tag, S.ort.lat, S.ort.lon, S.minuten);
+    const z = tagZeiten(tag).zeiten;
     for (const g of GEBETE) {
       if (!S.gebete[g.id]) continue;
       const faellig = z[g.id] - S.vorlauf * 60000;
@@ -292,7 +369,7 @@ async function lokalPruefen() {
         lokalGemeldet.add(schluessel);
         const reg = await navigator.serviceWorker.ready;
         reg.showNotification(`🕌 ${g.name}`, {
-          body: S.vorlauf > 0 ? `${g.name} in ${S.vorlauf} Minuten (${uhrzeit(z[g.id], S.ort.zone)})` : `${g.name}-Zeit ist da (${uhrzeit(z[g.id], S.ort.zone)})`,
+          body: S.vorlauf > 0 ? `${g.name} in ${S.vorlauf} Minuten (${uhrzeit(z[g.id], zone())})` : `${g.name}-Zeit ist da (${uhrzeit(z[g.id], zone())})`,
           tag: "gebet-" + schluessel, icon: "icons/icon-192.png", badge: "icons/icon-192.png",
         });
       }
@@ -306,6 +383,7 @@ document.querySelectorAll(".k-striche").forEach((g) => {
   g.innerHTML = Array.from({ length: 36 }, (_, i) => `<line x1="0" y1="-100" x2="0" y2="${i % 9 === 0 ? -94 : -97}" transform="rotate(${i * 10})"/>`).join("");
 });
 zeichneEinstellungen(); zeichneZeiten(); zeichneKible(); zeichneTracker();
+referenzLaden();
 if (S.erinnerungAn && pushKonfiguriert && "Notification" in window && Notification.permission === "granted") tokenHolen().catch((e) => console.warn(e));
 
 let letzterTag = tagSchluessel(heuteAmOrt());
@@ -314,4 +392,4 @@ setInterval(() => {
   if (t !== letzterTag) { letzterTag = t; zeichneZeiten(); zeichneTracker(); } else zeichneNaechstes();
   lokalPruefen();
 }, 1000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { zeichneZeiten(); lokalPruefen(); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { referenzLaden(); zeichneZeiten(); lokalPruefen(); } });
