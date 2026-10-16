@@ -47,9 +47,10 @@ Genauigkeit der Berechnung (Rückfall) gegen die Jahrestabelle bei 48,83° N / 9
 Nacht) und Yatsı bis 26 Min. Wer die Berechnung verbessern will: Diyanet-Halteregel nachbauen (Wert des letzten
 Tages halten, an dem der Winkel erreicht wurde).
 
-## Gebetszeiten: Referenz Diyanet (Schnittstelle), Rückfall Berechnung
+## Gebetszeiten: Diyanet (Wahl), Rückfall Berechnung
 
-**Referenz (Standard, seit 16.10.2026):** In der App unter *Mehr → Diyanet-Zeiten* Land → Stadt → Ort wählen
+**Diyanet (nur auf Wunsch, Entscheidung 16.10.2026):** Standard ist die Semerkand-Tabelle des Nutzers (Vergleich: Diyanet
+Waiblingen, IlceID 11041, weicht ab – İmsak +8, Güneş/Öğle/İkindi/Akşam +1…3, Yatsı −3 Min). In der App unter *Mehr → Diyanet-Zeiten* Land → Stadt → Ort wählen
 (Deutschland ist vorgewählt). Die App holt die Tagestabelle von `https://ezanvakti.emushaf.net/vakitler/<IlceID>`
 (Felder `MiladiTarihKisa`, `Imsak`, `Gunes`, `Ogle`, `Ikindi`, `Aksam`, `Yatsi`), speichert sie im Gerät (6 Std
 frisch, auch offline nutzbar) und zeigt genau diese Zeiten. Auch `sende.mjs` holt dieselbe Tabelle für die

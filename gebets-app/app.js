@@ -99,10 +99,10 @@ function zeichneZeiten() {
   }).join("");
   const fehler = refFehler ? " Die Diyanet-Zeiten konnten nicht geladen werden (" + refFehler + ")." : "";
   $("rechenHinweis").textContent = quelle === "tabelle"
-    ? (S.diyanet ? `Quelle: Diyanet (${S.diyanet.name}).${fehler}` : `Quelle: eingebaute Zeitentabelle ${S.ort.name} 2026.`)
+    ? (S.diyanet ? `Quelle: Diyanet (${S.diyanet.name}).${fehler}` : `Quelle: Zeitentabelle ${S.ort.name} 2026 (Semerkand).`)
     : S.diyanet
       ? `Für diesen Tag liegen keine Diyanet-Zeiten vor, die Zeit ist berechnet (Näherung).${fehler}`
-      : `Berechnet für ${S.ort.name} (${S.ort.lat.toFixed(2)}° N, ${S.ort.lon.toFixed(2)}° O) – eine Näherung. Genau wie bei der Diyanet: unter „Mehr“ einen Diyanet-Ort wählen.`;
+      : `Berechnet für ${S.ort.name} (${S.ort.lat.toFixed(2)}° N, ${S.ort.lon.toFixed(2)}° O) – eine Näherung. Genauer: unter „Mehr“ einen Diyanet-Ort wählen.`;
   zeichneNaechstes();
 }
 
@@ -208,7 +208,7 @@ function zeichneEinstellungen() {
   $("vorlauf").value = String(S.vorlauf);
   $("erinnerungGebete").innerHTML = GEBETE.map((g) => `<label><input type="checkbox" data-g="${g.id}" ${S.gebete[g.id] ? "checked" : ""}> ${g.name}</label>`).join("");
   $("minutenFelder").innerHTML = GEBETE.map((g) => `<label>${g.name}<input type="number" step="1" min="-30" max="30" data-g="${g.id}" value="${S.korrektur[g.id] || 0}"></label>`).join("");
-  $("dStatus").textContent = S.diyanet ? `Aktiv: ${S.diyanet.name}` : "Noch kein Diyanet-Ort gewählt – die Zeiten sind berechnet.";
+  $("dStatus").textContent = S.diyanet ? `Aktiv: ${S.diyanet.name}` : "Kein Diyanet-Ort gewählt – es gilt die Semerkand-Tabelle bzw. die Berechnung.";
   $("dEntfernen").style.display = S.diyanet ? "block" : "none";
   zeichnePushStatus();
 }
