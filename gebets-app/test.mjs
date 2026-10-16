@@ -186,4 +186,16 @@ nahe(kibleEntfernung(48.83, 9.32), 4070, 100, "Entfernung Waiblingen–Mekka");
   assert.ok(FREITAGS_HADITHE.includes(hadithFuer(20000, 5)));
   assert.ok(HADITHE.includes(hadithFuer(-5, 3)));
 }
+
+// Veröffentlichung: jede Datei, die app.js, sw.js oder ein Modul einbindet, muss im Pages-Workflow mitkopiert werden
+{
+  const { readFileSync } = await import("node:fs");
+  const wf = readFileSync(new URL("../.github/workflows/gebets-app-pages.yml", import.meta.url), "utf8");
+  const kopiert = new Set((wf.match(/cp index\.html .*/) || [""])[0].split(/\s+/));
+  const eingebunden = new Set();
+  for (const datei of ["app.js", "sprache.js", "kalender.js", "hadithe.js", "referenz.js", "gebetszeiten.js"]) {
+    for (const m of readFileSync(new URL("./" + datei, import.meta.url), "utf8").matchAll(/from "\.\/([\w\/.-]+\.js)"/g)) if (!m[1].includes("/")) eingebunden.add(m[1]);
+  }
+  for (const d of eingebunden) assert.ok(kopiert.has(d), `${d} fehlt im Pages-Workflow (cp-Zeile) – die App wäre online leer`);
+}
 console.log("Alle Prüfungen bestanden.");
