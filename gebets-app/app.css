@@ -188,3 +188,46 @@ select, input[type=number] { background: var(--sg-input); box-shadow: var(--sg-i
 .leiste button.aktiv { color: var(--sg-accent); }
 .toast { background: var(--sg-modal); color: var(--sg-text); border: 1px solid var(--sg-border); box-shadow: var(--sg-karte-schatten); }
 @media print { body::before, .sg-schalter { display: none; } }
+
+/* ===== Islamisches Design: Grün, Gold, Sternmuster, Bogen ===== */
+:root {
+  --sg-ground:#06130E; --sg-ground2:#0A1F17;
+  --sg-text:#EEF2E6; --sg-muted:#A8B5A8; --sg-faint:#6F7F72;
+  --sg-border:rgba(212,175,90,.20); --sg-modal:#0D1F17;
+  --sg-accent:#D4AF5A; --sg-accent-soft:rgba(212,175,90,.16); --sg-accent-ink:#1A1405;
+  --sg-messing:linear-gradient(135deg,#EBD28A,#B8923F); --sg-link:#EBD28A; --sg-glow:rgba(212,175,90,.40); --sg-lichtkante:rgba(235,210,138,.85);
+  --sg-display:"Amiri","Chakra Petch",Georgia,serif;
+  --sg-hintergrund:radial-gradient(520px 420px at 50% -4%,rgba(212,175,90,.20),transparent 70%),radial-gradient(520px 460px at 90% 78%,rgba(31,143,95,.16),transparent 70%),radial-gradient(420px 360px at 8% 90%,rgba(212,175,90,.08),transparent 70%),linear-gradient(180deg,#0A1F17,#06130E);
+  --muster:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23D4AF5A' stroke-width='1'%3E%3Crect x='22' y='22' width='40' height='40'/%3E%3Crect x='22' y='22' width='40' height='40' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='9'/%3E%3Cpath d='M0 0L12 12M84 0L72 12M0 84L12 72M84 84L72 72'/%3E%3C/g%3E%3C/svg%3E"); --muster-deckkraft:.10;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --sg-ground:#F4EFDF; --sg-ground2:#FBF8EE;
+  --sg-text:#15271E; --sg-muted:#566559; --sg-faint:#8A978B;
+  --sg-border:rgba(15,61,46,.16); --sg-modal:#FFFFFF;
+  --sg-accent:#8F6B1F; --sg-accent-soft:rgba(143,107,31,.13); --sg-accent-ink:#FFF8E6;
+  --sg-messing:linear-gradient(135deg,#B8923F,#8F6B1F); --sg-link:#7A5A18; --sg-glow:rgba(143,107,31,.25); --sg-lichtkante:rgba(184,146,63,.75);
+  --sg-hintergrund:radial-gradient(620px 460px at 50% 0%,rgba(212,175,90,.26),transparent 70%),radial-gradient(520px 420px at 100% 100%,rgba(15,90,64,.08),transparent 70%),linear-gradient(180deg,#FBF8EE,#F4EFDF);
+  --muster:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%230F5A40' stroke-width='1'%3E%3Crect x='22' y='22' width='40' height='40'/%3E%3Crect x='22' y='22' width='40' height='40' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='9'/%3E%3Cpath d='M0 0L12 12M84 0L72 12M0 84L12 72M84 84L72 72'/%3E%3C/g%3E%3C/svg%3E"); --muster-deckkraft:.09;
+} }
+:root[data-theme="light"] {
+  --sg-ground:#F4EFDF; --sg-ground2:#FBF8EE;
+  --sg-text:#15271E; --sg-muted:#566559; --sg-faint:#8A978B;
+  --sg-border:rgba(15,61,46,.16); --sg-modal:#FFFFFF;
+  --sg-accent:#8F6B1F; --sg-accent-soft:rgba(143,107,31,.13); --sg-accent-ink:#FFF8E6;
+  --sg-messing:linear-gradient(135deg,#B8923F,#8F6B1F); --sg-link:#7A5A18; --sg-glow:rgba(143,107,31,.25); --sg-lichtkante:rgba(184,146,63,.75);
+  --sg-hintergrund:radial-gradient(620px 460px at 50% 0%,rgba(212,175,90,.26),transparent 70%),radial-gradient(520px 420px at 100% 100%,rgba(15,90,64,.08),transparent 70%),linear-gradient(180deg,#FBF8EE,#F4EFDF);
+  --muster:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%230F5A40' stroke-width='1'%3E%3Crect x='22' y='22' width='40' height='40'/%3E%3Crect x='22' y='22' width='40' height='40' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='9'/%3E%3Cpath d='M0 0L12 12M84 0L72 12M0 84L12 72M84 84L72 72'/%3E%3C/g%3E%3C/svg%3E"); --muster-deckkraft:.09;
+}
+body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background-image: var(--muster); background-size: 84px 84px; opacity: var(--muster-deckkraft); }
+h2 { font-family: var(--sg-display); text-transform: none; letter-spacing: .01em; font-size: 1.2rem; }
+.ort { font-family: var(--sg-display); font-size: 1.6rem; }
+.datum, .hidschri { font-family: var(--sg-body); }
+.zierleiste { position: relative; height: 14px; margin: 0 16px 4px; background: linear-gradient(90deg, transparent, var(--sg-accent) 25%, var(--sg-accent) 75%, transparent) center / 100% 1px no-repeat; }
+.zierleiste::before, .zierleiste::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -6px 0 0 -6px; border: 1px solid var(--sg-accent); background: var(--sg-ground); }
+.zierleiste::after { transform: rotate(45deg); }
+.naechstes { border-radius: 50% 50% 22px 22px / 130px 130px 22px 22px; padding: 44px 18px 20px; outline: 1px solid var(--sg-border); outline-offset: 5px; margin-top: 8px; }
+.naechstes .gross { font-size: 2rem; }
+.naechstes .arabisch { font-family: "Amiri", serif; font-size: 2rem; line-height: 1.3; color: var(--sg-accent); margin-top: -2px; }
+.liste .ar { font-family: "Amiri", serif; font-size: 1.15rem; color: var(--sg-accent); margin-left: 6px; font-weight: 400; }
+.liste .name { font-family: var(--sg-display); font-size: 1.15rem; }
+.liste li.jetzt { box-shadow: inset 3px 0 0 var(--sg-accent); }

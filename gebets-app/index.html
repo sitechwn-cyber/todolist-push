@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gebetszeiten</title>
 <meta name="description" content="Gebetszeiten, Kıble-Kompass, Erinnerungen und Gebets-Tracker">
-<meta name="theme-color" content="#07080B">
+<meta name="theme-color" content="#06130E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css">
 <script>
 // ===== SiTech Glas – Hell/Dunkel-Schalter (Stand 07.10.2026) =====
@@ -35,7 +35,7 @@
   function setzen(t) {
     document.documentElement.setAttribute("data-theme", t);
     var m = document.querySelector('meta[name="theme-color"]');
-    if (m) m.content = t === "light" ? "#F3EFE8" : "#07080B";
+    if (m) m.content = t === "light" ? "#F4EFDF" : "#06130E";
     var b = document.getElementById("sgSchalter");
     if (b) { b.textContent = t === "light" ? "🌙" : "☀️"; b.title = t === "light" ? "Dunkle Ansicht" : "Helle Ansicht"; }
   }
@@ -64,6 +64,7 @@
     <button type="button" id="sgSchalter" class="sg-schalter sg-inline" onclick="sgThemeUmschalten()">☀️</button>
   </div>
 </header>
+<div class="zierleiste" aria-hidden="true"></div>
 
 <main>
   <!-- ZEITEN -->
@@ -71,6 +72,7 @@
     <div class="naechstes" id="naechstesKarte">
       <div class="klein">Nächstes Gebet</div>
       <div class="gross" id="naechstesName">–</div>
+      <div class="arabisch" id="naechstesAr" lang="ar" dir="rtl"></div>
       <div class="zeit" id="naechstesZeit">–</div>
       <div class="rest" id="naechstesRest">–</div>
     </div>

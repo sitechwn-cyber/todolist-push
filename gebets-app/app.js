@@ -92,7 +92,7 @@ function zeichneZeiten() {
     const vorbei = z[g.id] <= jetzt;
     const istNaechstes = nae && nae.gebet.id === g.id && tagSchluessel(nae.tag) === schluessel;
     return `<li class="${vorbei ? "vorbei" : ""} ${istNaechstes ? "jetzt" : ""}">
-      <div class="namen"><div class="name">${g.name} <span class="unter">${g.arabisch}</span></div><div class="unter">${g.deutsch}</div></div>
+      <div class="namen"><div class="name">${g.name} <span class="ar">${g.arabisch}</span></div><div class="unter">${g.deutsch}</div></div>
       <div class="zeit">${uhrzeit(z[g.id], zone())}</div>
       <button class="haken ${g.taeglich ? "" : "leer"} ${erledigt[g.id] ? "an" : ""}" data-g="${g.id}" aria-label="${g.name} verrichtet">${erledigt[g.id] ? "✓" : ""}</button>
     </li>`;
@@ -110,6 +110,7 @@ function zeichneNaechstes() {
   const nae = naechstes(Date.now(), zone(), (t) => tagZeiten(t).zeiten);
   if (!nae) return;
   $("naechstesName").textContent = nae.gebet.name;
+  $("naechstesAr").textContent = nae.gebet.arabisch;
   $("naechstesZeit").textContent = uhrzeit(nae.zeit, zone());
   const rest = Math.max(0, Math.round((nae.zeit - Date.now()) / 1000));
   const h = Math.floor(rest / 3600), m = Math.floor((rest % 3600) / 60), s = rest % 60;
