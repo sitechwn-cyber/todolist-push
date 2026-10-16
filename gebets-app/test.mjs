@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { berechne, GEBETE, uhrzeit, kibleRichtung, kibleEntfernung, naechstes, tagVon, tagPlus, tagSchluessel, lokalZuMs } from "./gebetszeiten.js";
 import { leseVakitler, tagesZeiten } from "./referenz.js";
 import { plane, benoetigteOrte } from "./plane-push.mjs";
+import { TEXTE } from "./sprache.js";
+import { HADITHE, FREITAGS_HADITHE, QUELLEN, hadithFuer } from "./hadithe.js";
+import { hidschri, ereignisse, ereignisseAm, naechsteEreignisse, REGELN, schluessel as tagKey } from "./kalender.js";
 
 const min = (ms, zone) => { const [h, m] = uhrzeit(ms, zone).split(":").map(Number); return h * 60 + m; };
 const nahe = (ist, soll, tol, text) => assert.ok(Math.abs(ist - soll) <= tol, `${text}: ${ist} statt ~${soll}`);
@@ -135,5 +138,52 @@ nahe(kibleEntfernung(48.83, 9.32), 4070, 100, "Entfernung Waiblingen–Mekka");
   const pl = plane({ geraete: { a: geraet }, gesendet: {}, jetzt: um - 5 * 60000, eingebaut: { "waiblingen-2026": jahr } });
   assert.equal(pl.nachrichten.length, 1);
   assert.match(pl.nachrichten[0].text, /İmsak in 10 Minuten \(05:49\)/);
+}
+
+// Sprachen: jeder deutsche Schlüssel hat eine türkische Übersetzung (und umgekehrt), Platzhalter stimmen überein
+{
+  const de = Object.keys(TEXTE.de), tr = Object.keys(TEXTE.tr);
+  assert.deepEqual(de.filter((k) => !(k in TEXTE.tr)), [], "Schlüssel ohne Türkisch");
+  assert.deepEqual(tr.filter((k) => !(k in TEXTE.de)), [], "Schlüssel ohne Deutsch");
+  const ph = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(",");
+  for (const k of de) assert.equal(ph(TEXTE.tr[k]), ph(TEXTE.de[k]), `Platzhalter in ${k}`);
+  for (const r of REGELN) { assert.ok(TEXTE.de["f." + r.id] && TEXTE.de["f." + r.id + ".t"], "Feiertag ohne Text: " + r.id); }
+}
+
+// Kalender: Hidschri-Datum und religiöse Tage (Umm al-Qura)
+{
+  assert.deepEqual(hidschri({ y: 2026, m: 3, d: 20 }), { j: 1447, m: 10, d: 1 }); // 1. Schawwal = Ramadanfest
+  assert.deepEqual(hidschri({ y: 2026, m: 5, d: 27 }), { j: 1447, m: 12, d: 10 }); // 10. Dhu l-hiddscha = Opferfest
+  assert.deepEqual(hidschri({ y: 2026, m: 10, d: 16 }), { j: 1448, m: 5, d: 5 });
+  const ev = ereignisse(2026);
+  const tage = (id) => ev.filter((e) => e.id === id).map((e) => tagKey(e.tag));
+  assert.deepEqual(tage("fitr"), ["2026-03-20", "2026-03-21", "2026-03-22"]);
+  assert.deepEqual(tage("adha"), ["2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30"]);
+  assert.deepEqual(tage("arafat"), ["2026-05-26"]);
+  assert.deepEqual(tage("arefeFitr"), ["2026-03-19"]);
+  assert.deepEqual(tage("ramadan"), ["2026-02-18"]);
+  assert.deepEqual(tage("neujahr"), ["2026-06-16"]);
+  assert.deepEqual(tage("aschura"), ["2026-06-25"]);
+  assert.deepEqual(tage("berat"), ["2026-02-02"]);
+  assert.equal(tage("regaib").length, 1);
+  assert.equal(new Date(Date.UTC(2026, 11, 10, 12)).getUTCDay(), 4); // Regaib am Donnerstagabend
+  assert.equal(ereignisseAm({ y: 2026, m: 3, d: 21 })[0].nr, 2);
+  const nae = naechsteEreignisse({ y: 2026, m: 10, d: 16 }, 3).map((e) => e.id);
+  assert.deepEqual(nae, ["dreimonate", "regaib", "mirac"]);
+  // Jahreswechsel: kommende Tage greifen ins nächste Jahr
+  assert.ok(naechsteEreignisse({ y: 2026, m: 12, d: 30 }, 2).length === 2);
+}
+
+// Hadithe: vollständig, ohne Dubletten, Quellen bekannt, Tag für Tag wechselnd, Freitags eigene
+{
+  for (const h of [...HADITHE, ...FREITAGS_HADITHE]) {
+    assert.ok(h.de && h.tr && h.q.length, "Hadith unvollständig: " + (h.de || "").slice(0, 30));
+    for (const k of h.q) assert.ok(QUELLEN[k], "unbekannte Quelle " + k);
+  }
+  assert.ok(HADITHE.length >= 60, "zu wenige Hadithe: " + HADITHE.length);
+  assert.equal(new Set(HADITHE.map((h) => h.de)).size, HADITHE.length, "doppelter Hadith");
+  assert.notEqual(hadithFuer(20000, 1).de, hadithFuer(20001, 2).de);
+  assert.ok(FREITAGS_HADITHE.includes(hadithFuer(20000, 5)));
+  assert.ok(HADITHE.includes(hadithFuer(-5, 3)));
 }
 console.log("Alle Prüfungen bestanden.");

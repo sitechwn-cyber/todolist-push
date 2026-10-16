@@ -14,6 +14,9 @@ statischen Hosting (GitHub Pages, Cloudflare Pages, Firebase Hosting).
 | Datei | Aufgabe |
 |---|---|
 | `referenz.js` | **Referenz: Diyanet-Zeiten** über `ezanvakti.emushaf.net` (Länder/Städte/Orte, Tagestabelle), `tagesZeiten()` = Referenz, sonst Berechnung |
+| `sprache.js` | **Deutsch/Türkisch**: Tabelle `TEXTE`, `t("schluessel", {platzhalter})`, `uebersetzeSeite()` (HTML-Attribute `data-t`, `data-t-aria`, `data-t-title`). Neue Texte immer in BEIDEN Sprachen; `npm test` prüft Gleichstand und Platzhalter. Wahl im Gerät (`gebet.sprache`), sonst Gerätesprache. **Nicht übersetzt:** Push-Texte vom Server (`plane-push.mjs`) – bräuchten das Feld `sprache` in `database.rules.json` |
+| `kalender.js` | Hidschri-Datum und religiöse Tage (Umm al-Qura über `Intl`), Regeln in `REGELN`; Kandil = Abend vor dem Tag; Regaib = Donnerstagabend vor dem ersten Freitag im Radschab. Abweichung zur Diyanet um 1 Tag möglich (steht in der App) |
+| `hadithe.js` | **Hadith des Tages** (66 + 2 für Freitage), Quellen-Kürzel, Übersetzungen sinngemäß und nicht amtlich – vor Weitergabe von einem Kundigen prüfen lassen |
 | `gebetszeiten.js` | Rückfall-Rechenkern (Sonnenstand), Kıble, Zeitzonen-Hilfen. Läuft im Browser **und** bei GitHub |
 | `app.js`, `index.html`, `app.css` | Oberfläche (4 Tabs: Zeiten, Kıble, Tracker, Mehr) |
 | `config.js` | Firebase-Web-Konfiguration + VAPID-Schlüssel (öffentlich, leer = kein Push) |

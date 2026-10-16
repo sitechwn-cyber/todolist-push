@@ -231,3 +231,45 @@ h2 { font-family: var(--sg-display); text-transform: none; letter-spacing: .01em
 .liste .ar { font-family: "Amiri", serif; font-size: 1.15rem; color: var(--sg-accent); margin-left: 6px; font-weight: 400; }
 .liste .name { font-family: var(--sg-display); font-size: 1.15rem; }
 .liste li.jetzt { box-shadow: inset 3px 0 0 var(--sg-accent); }
+
+/* ===== Sprache und Kalender ===== */
+.sg-schalter.sprache { font: 700 12px/1 var(--sg-body); letter-spacing: .02em; }
+.leiste button i { font-style: normal; }
+.sprachwahl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sprachwahl .knopf { margin: 4px 0; }
+.sprachwahl .knopf.aktivSprache { background: var(--sg-messing); color: var(--sg-accent-ink); border-color: transparent; }
+
+.monatskopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 4px 0 10px; }
+.monatskopf button { width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--sg-border); background: var(--sg-karte); box-shadow: var(--sg-karte-schatten); color: var(--sg-text); font-size: 1.1rem; }
+.monatsname { text-align: center; }
+.monatsname .gross { font-family: var(--sg-display); font-size: 1.5rem; font-weight: 700; text-transform: capitalize; }
+.kalraster { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.kalraster .wt { text-align: center; font-size: .75rem; color: var(--sg-muted); padding: 4px 0; text-transform: capitalize; }
+.kalraster .leer { min-height: 52px; }
+.kalraster button.tag { position: relative; min-height: 52px; border: 1px solid var(--sg-border); border-radius: 12px; background: var(--sg-karte); color: var(--sg-text); padding: 4px 0 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.kalraster button.tag b { font-size: 1.05rem; font-weight: 600; }
+.kalraster button.tag small { font-family: "Amiri", serif; font-size: .8rem; color: var(--sg-accent); line-height: 1; }
+.kalraster button.freitag b { color: var(--sg-accent); }
+.kalraster button.heute { outline: 2px solid var(--sg-accent); outline-offset: -2px; }
+.kalraster button.gewaehlt { background: var(--sg-accent-soft); border-color: var(--sg-accent); }
+.kalraster button.bayram { background: var(--sg-messing); color: var(--sg-accent-ink); }
+.kalraster button.bayram b, .kalraster button.bayram small { color: var(--sg-accent-ink); }
+.kalraster i { position: absolute; top: 4px; right: 5px; width: 6px; height: 6px; border-radius: 50%; }
+.kalraster i.punkt-tag { background: var(--sg-accent); }
+.kalraster i.punkt-nacht { background: transparent; box-shadow: inset -2px -1px 0 0 var(--sg-accent); width: 8px; height: 8px; }
+.kalraster i.punkt-bayram { background: var(--sg-accent-ink); }
+.kleinknopf { width: auto; margin: 10px auto; padding: 8px 18px; font-size: .9rem; }
+.kartentext { background: var(--sg-karte); border: 1px solid var(--sg-border); box-shadow: var(--sg-karte-schatten); border-radius: 16px; padding: 14px; margin: 6px 0 0; }
+.kartentext .gross { font-family: var(--sg-display); font-size: 1.2rem; font-weight: 700; }
+.kartentext .hid { color: var(--sg-accent); margin-bottom: 8px; }
+.ereignis { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--sg-border); }
+.ereignis > span { font-size: 1.3rem; line-height: 1.2; }
+.liste.kommend li { cursor: pointer; }
+.liste.kommend .sym { font-size: 1.3rem; }
+.liste.kommend .zeit { font-family: var(--sg-body); font-size: .85rem; text-align: right; white-space: nowrap; }
+
+.hadith { margin-top: 14px; }
+.hadith h3, .hadith-klein h3 { margin: 0 0 2px; font-family: var(--sg-display); font-size: 1.1rem; color: var(--sg-accent); }
+.hadith blockquote, .hadith-klein blockquote { margin: 8px 0; padding: 0 0 0 12px; border-left: 3px solid var(--sg-accent); font-family: var(--sg-display); font-size: 1.1rem; line-height: 1.45; }
+.hadith .quelle, .hadith-klein .quelle { font-size: .78rem; }
+.hadith-klein { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--sg-border); }

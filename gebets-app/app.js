@@ -2,6 +2,9 @@ import { GEBETE, naechstes, tagVon, tagPlus, tagSchluessel, uhrzeit, kibleRichtu
 import { tagesZeiten, holeVakitler, holeLaender, holeStaedte, holeOrte } from "./referenz.js";
 import { ladeEingebaut } from "./daten/index.js";
 import { FIREBASE, VAPID_KEY } from "./config.js";
+import { t, uebersetzeSeite, sprache, setzeSprache, andereSprache, lokale } from "./sprache.js";
+import { hadithFuer, quelleText } from "./hadithe.js";
+import { hidschri, plusTage, wochentag, gleicherTag, schluessel as kalSchluessel, tagsNummer, HIDSCHRI_MONATE, ereignisseAm, naechsteEreignisse } from "./kalender.js";
 
 const $ = (id) => document.getElementById(id);
 const TAEGLICH = GEBETE.filter((g) => g.taeglich);
@@ -51,6 +54,7 @@ for (const b of document.querySelectorAll(".leiste button")) {
     document.querySelectorAll(".leiste button").forEach((x) => x.classList.toggle("aktiv", x === b));
     document.querySelectorAll(".seite").forEach((s) => s.classList.toggle("aktiv", s.id === "tab-" + b.dataset.tab));
     if (b.dataset.tab === "tracker") zeichneTracker();
+    if (b.dataset.tab === "kalender") zeichneKalender();
   });
 }
 
@@ -74,35 +78,44 @@ let tagVersatz = 0; // 0 = heute
 const heuteAmOrt = () => tagVon(Date.now(), zone());
 const gezeigterTag = () => tagPlus(heuteAmOrt(), tagVersatz);
 
+const mittagMs = (tag) => Date.UTC(tag.y, tag.m - 1, tag.d, 12);
+const datumLang = (tag) => new Date(mittagMs(tag)).toLocaleDateString(lokale(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const hidschriZeile = (tag) => { const h = hidschri(tag); return `${h.d}${sprache === "de" ? "." : ""} ${HIDSCHRI_MONATE[sprache][h.m - 1]} ${h.j}`; };
+
+function hadithHtml(tag) {
+  const h = hadithFuer(tagsNummer(tag), wochentag(tag));
+  return `<h3>${t("h.titel")}</h3><div class="klein">${t("h.einleitung")}</div><blockquote>${h[sprache]}</blockquote>`
+    + `<div class="klein quelle">${quelleText(h, sprache, t("h.nawawi"))} · ${t("h.hinweis")}</div>`;
+}
+
 function zeichneZeiten() {
   const jetzt = Date.now();
   const tag = gezeigterTag();
   const { zeiten: z, quelle } = tagZeiten(tag);
   const nae = naechstes(jetzt, zone(), (t) => tagZeiten(t).zeiten);
   $("ortName").textContent = ortName();
-  $("datumText").textContent = new Date(Date.UTC(tag.y, tag.m - 1, tag.d, 12)).toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-  try {
-    $("hidschriText").textContent = new Intl.DateTimeFormat("de-DE-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(Date.UTC(tag.y, tag.m - 1, tag.d, 12));
-  } catch { $("hidschriText").textContent = ""; }
-  $("tagHeute").style.visibility = tagVersatz === 0 ? "hidden" : "visible";
+  $("datumText").textContent = datumLang(tag);
+  try { $("hidschriText").textContent = hidschriZeile(tag); } catch { $("hidschriText").textContent = ""; }
+  $("tagHeute").style.display = tagVersatz === 0 ? "none" : "";
 
+  $("hadithKarte").innerHTML = hadithHtml(tag);
   const schluessel = tagSchluessel(tag);
   const erledigt = tracker[schluessel] || {};
   $("zeitenListe").innerHTML = GEBETE.map((g) => {
     const vorbei = z[g.id] <= jetzt;
     const istNaechstes = nae && nae.gebet.id === g.id && tagSchluessel(nae.tag) === schluessel;
     return `<li class="${vorbei ? "vorbei" : ""} ${istNaechstes ? "jetzt" : ""}">
-      <div class="namen"><div class="name">${g.name} <span class="ar">${g.arabisch}</span></div><div class="unter">${g.deutsch}</div></div>
+      <div class="namen"><div class="name">${g.name} <span class="ar">${g.arabisch}</span></div><div class="unter">${t("g." + g.id)}</div></div>
       <div class="zeit">${uhrzeit(z[g.id], zone())}</div>
-      <button class="haken ${g.taeglich ? "" : "leer"} ${erledigt[g.id] ? "an" : ""}" data-g="${g.id}" aria-label="${g.name} verrichtet">${erledigt[g.id] ? "✓" : ""}</button>
+      <button class="haken ${g.taeglich ? "" : "leer"} ${erledigt[g.id] ? "an" : ""}" data-g="${g.id}" aria-label="${t("z.verrichtet", { name: g.name })}">${erledigt[g.id] ? "✓" : ""}</button>
     </li>`;
   }).join("");
-  const fehler = refFehler ? " Die Diyanet-Zeiten konnten nicht geladen werden (" + refFehler + ")." : "";
+  const fehler = refFehler ? t("z.diyanetFehler", { grund: refFehler }) : "";
   $("rechenHinweis").textContent = quelle === "tabelle"
-    ? (S.diyanet ? `Quelle: Diyanet (${S.diyanet.name}).${fehler}` : `Quelle: Zeitentabelle ${S.ort.name} 2026 (Semerkand).`)
+    ? (S.diyanet ? t("z.quelleDiyanet", { ort: S.diyanet.name, fehler }) : t("z.quelleTabelle", { ort: S.ort.name }))
     : S.diyanet
-      ? `Für diesen Tag liegen keine Diyanet-Zeiten vor, die Zeit ist berechnet (Näherung).${fehler}`
-      : `Berechnet für ${S.ort.name} (${S.ort.lat.toFixed(2)}° N, ${S.ort.lon.toFixed(2)}° O) – eine Näherung. Genauer: unter „Mehr“ einen Diyanet-Ort wählen.`;
+      ? t("z.keineDiyanet", { fehler })
+      : t("z.berechnet", { ort: S.ort.name, breite: S.ort.lat.toFixed(2), laenge: S.ort.lon.toFixed(2) });
   zeichneNaechstes();
 }
 
@@ -114,7 +127,8 @@ function zeichneNaechstes() {
   $("naechstesZeit").textContent = uhrzeit(nae.zeit, zone());
   const rest = Math.max(0, Math.round((nae.zeit - Date.now()) / 1000));
   const h = Math.floor(rest / 3600), m = Math.floor((rest % 3600) / 60), s = rest % 60;
-  $("naechstesRest").textContent = `in ${h ? h + " Std " : ""}${String(m).padStart(h ? 2 : 1, "0")} Min ${String(s).padStart(2, "0")} Sek`;
+  const zeit = `${h ? h + " " + t("z.std") + " " : ""}${String(m).padStart(h ? 2 : 1, "0")} ${t("z.min")} ${String(s).padStart(2, "0")} ${t("z.sek")}`;
+  $("naechstesRest").textContent = t("z.rest", { zeit });
 }
 
 $("zeitenListe").addEventListener("click", (e) => {
@@ -144,24 +158,27 @@ function zeichneTracker() {
   $("trkSerie").textContent = serie;
   const summe = tage.reduce((a, t) => a + anzahl(t), 0);
   $("trkWoche").textContent = Math.round((summe / 35) * 100) + "%";
-  const name = (t, i) => i === 0 ? "Heute" : i === 1 ? "Gestern"
-    : new Date(Date.UTC(t.y, t.m - 1, t.d, 12)).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "UTC" });
+  const name = (tg, i) => i === 0 ? t("t.heuteGross") : i === 1 ? t("t.gestern")
+    : new Date(mittagMs(tg)).toLocaleDateString(lokale(), { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "UTC" });
   $("trkRaster").innerHTML = `<div class="zeile kopfz"><span></span>${TAEGLICH.map((g) => `<span>${g.name}</span>`).join("")}</div>`
     + tage.map((t, i) => `<div class="zeile"><span class="tag">${name(t, i)}</span>${TAEGLICH.map((g) => {
       const an = (tracker[tagSchluessel(t)] || {})[g.id];
-      return `<button class="punkt ${an ? "an" : ""}" data-t="${tagSchluessel(t)}" data-g="${g.id}" aria-label="${g.name}">${an ? "✓" : ""}</button>`;
+      return `<button class="punkt ${an ? "an" : ""}" data-tag="${tagSchluessel(t)}" data-g="${g.id}" aria-label="${g.name}">${an ? "✓" : ""}</button>`;
     }).join("")}</div>`).join("");
 }
 $("trkRaster").addEventListener("click", (e) => {
   const b = e.target.closest(".punkt");
-  if (b) umschalten(b.dataset.t, b.dataset.g);
+  if (b) umschalten(b.dataset.tag, b.dataset.g);
 });
 
 // ---------- Kıble ----------
 function zeichneKible() {
   const grad = kibleRichtung(S.ort.lat, S.ort.lon);
   $("kibleGrad").textContent = Math.round(grad) + "°";
-  $("kibleText").textContent = `Richtung Kaaba ab ${S.ort.name} · ${Math.round(kibleEntfernung(S.ort.lat, S.ort.lon)).toLocaleString("de-DE")} km`;
+  $("kibleText").textContent = t("k.text", { ort: S.ort.name, km: Math.round(kibleEntfernung(S.ort.lat, S.ort.lon)).toLocaleString(lokale()) });
+  const himmel = sprache === "tr" ? ["K", "D", "G", "B"] : ["N", "O", "S", "W"];
+  document.querySelector(".k-n").textContent = himmel[0];
+  document.querySelectorAll(".k-w").forEach((el, i) => { el.textContent = himmel[i + 1]; });
   setzeKompass(null);
 }
 let kAnzeige = { rose: 0, zeiger: 0 }, kTreffer = false, kGlatt = null;
@@ -190,13 +207,13 @@ function beiAusrichtung(e) {
 $("kompassStart").onclick = async () => {
   try {
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-      if ((await DeviceOrientationEvent.requestPermission()) !== "granted") { toast("Kompass-Zugriff abgelehnt"); return; }
+      if ((await DeviceOrientationEvent.requestPermission()) !== "granted") { toast(t("k.abgelehnt")); return; }
     }
     window.addEventListener("deviceorientationabsolute", beiAusrichtung, true);
     window.addEventListener("deviceorientation", beiAusrichtung, true);
     $("kompassStart").style.display = "none";
-    setTimeout(() => { if (kGlatt === null) toast("Dieses Gerät meldet keinen Kompass. Nutze die Gradzahl oben."); }, 2500);
-  } catch { toast("Kompass nicht verfügbar"); }
+    setTimeout(() => { if (kGlatt === null) toast(t("k.keinSensor")); }, 2500);
+  } catch { toast(t("k.nichtVerfuegbar")); }
 };
 
 // ---------- Einstellungen ----------
@@ -206,10 +223,11 @@ function zeichneEinstellungen() {
   if (eigen) optionen.unshift(`<option value="eigen">${S.ort.name}</option>`);
   $("ortAuswahl").innerHTML = optionen.join("");
   $("ortAuswahl").value = eigen ? "eigen" : String(ORTE.findIndex((o) => o.name === S.ort.name));
+  $("vorlauf").innerHTML = [0, 5, 10, 15, 30].map((n) => `<option value="${n}">${n ? t("e.minVorher", { n }) : t("e.zurZeit")}</option>`).join("");
   $("vorlauf").value = String(S.vorlauf);
   $("erinnerungGebete").innerHTML = GEBETE.map((g) => `<label><input type="checkbox" data-g="${g.id}" ${S.gebete[g.id] ? "checked" : ""}> ${g.name}</label>`).join("");
   $("minutenFelder").innerHTML = GEBETE.map((g) => `<label>${g.name}<input type="number" step="1" min="-30" max="30" data-g="${g.id}" value="${S.korrektur[g.id] || 0}"></label>`).join("");
-  $("dStatus").textContent = S.diyanet ? `Aktiv: ${S.diyanet.name}` : "Kein Diyanet-Ort gewählt – es gilt die Semerkand-Tabelle bzw. die Berechnung.";
+  $("dStatus").textContent = S.diyanet ? t("e.aktiv", { name: S.diyanet.name }) : t("e.keinDiyanet");
   $("dEntfernen").style.display = S.diyanet ? "block" : "none";
   zeichnePushStatus();
 }
@@ -218,13 +236,13 @@ $("ortAuswahl").onchange = (e) => {
   S.ort = ORTE[+e.target.value]; eingebautLaden(); aenderung(); // Diyanet-Ort bleibt (andere Zeitzone/Ort nur für Kıble und Rückfall)
 };
 $("gpsKnopf").onclick = () => {
-  if (!navigator.geolocation) { $("gpsHinweis").textContent = "Standort wird von diesem Gerät nicht unterstützt."; return; }
-  $("gpsHinweis").textContent = "Standort wird ermittelt …";
+  if (!navigator.geolocation) { $("gpsHinweis").textContent = t("e.gpsNein"); return; }
+  $("gpsHinweis").textContent = t("e.gpsSuche");
   navigator.geolocation.getCurrentPosition((p) => {
-    S.ort = { name: "Mein Standort", lat: +p.coords.latitude.toFixed(3), lon: +p.coords.longitude.toFixed(3), zone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+    S.ort = { name: t("e.meinStandort"), lat: +p.coords.latitude.toFixed(3), lon: +p.coords.longitude.toFixed(3), zone: Intl.DateTimeFormat().resolvedOptions().timeZone };
     $("gpsHinweis").textContent = "";
     aenderung(); zeichneEinstellungen();
-  }, (f) => { $("gpsHinweis").textContent = f.code === 1 ? "Standortzugriff wurde abgelehnt. Wähle eine Stadt aus der Liste." : "Standort konnte nicht ermittelt werden."; }, { timeout: 15000, maximumAge: 600000 });
+  }, (f) => { $("gpsHinweis").textContent = f.code === 1 ? t("e.gpsAbgelehnt") : t("e.gpsFehler"); }, { timeout: 15000, maximumAge: 600000 });
 };
 $("vorlauf").onchange = (e) => { S.vorlauf = +e.target.value; aenderung(); };
 $("erinnerungGebete").addEventListener("change", (e) => { if (e.target.dataset.g) { S.gebete[e.target.dataset.g] = e.target.checked; aenderung(); } });
@@ -247,22 +265,22 @@ const fuelle = (sel, l, leer) => { $(sel).innerHTML = `<option value="">${leer}<
 const gewaehlt = (sel) => { const o = $(sel).selectedOptions[0]; return o && o.value ? { id: o.value, name: o.textContent } : null; };
 async function diyanetFuellen(stufe) {
   try {
-    $("dStatus").textContent = "Lade Liste …";
+    $("dStatus").textContent = t("e.laden");
     if (stufe === "land") {
       const l = await liste("land");
-      fuelle("dLand", l, "Land wählen");
+      fuelle("dLand", l, t("e.landWaehlen"));
       const de = l.find((x) => /^almanya$/i.test(x.name));
       if (de) { $("dLand").value = de.id; await diyanetFuellen("stadt"); return; }
     } else if (stufe === "stadt") {
       const land = gewaehlt("dLand");
-      fuelle("dStadt", land ? await liste("stadt", land.id) : [], "Stadt wählen"); fuelle("dOrt", [], "Ort wählen");
+      fuelle("dStadt", land ? await liste("stadt", land.id) : [], t("e.stadtWaehlen")); fuelle("dOrt", [], t("e.ortWaehlen"));
     } else {
       const stadt = gewaehlt("dStadt");
-      fuelle("dOrt", stadt ? await liste("ort", stadt.id) : [], "Ort wählen");
+      fuelle("dOrt", stadt ? await liste("ort", stadt.id) : [], t("e.ortWaehlen"));
     }
     zeichneEinstellungen();
   } catch (e) {
-    $("dStatus").textContent = "Die Diyanet-Liste konnte nicht geladen werden (" + (e.message || e) + "). Internet nötig.";
+    $("dStatus").textContent = t("e.listeFehler", { grund: e.message || e });
   }
 }
 $("dLand").onchange = () => diyanetFuellen("stadt");
@@ -310,7 +328,7 @@ async function firebaseLaden() {
   if (fb) return fb;
   const v = "10.14.1";
   for (const n of ["app", "database", "messaging"]) await skript(`https://www.gstatic.com/firebasejs/${v}/firebase-${n}-compat.js`);
-  if (!firebase.messaging.isSupported()) throw new Error("Push wird von diesem Browser nicht unterstützt");
+  if (!firebase.messaging.isSupported()) throw new Error(t("p.keinPush"));
   firebase.initializeApp(FIREBASE);
   fb = { db: firebase.database(), messaging: firebase.messaging(), token: null };
   return fb;
@@ -336,13 +354,13 @@ async function tokenHolen() {
 
 function zeichnePushStatus() {
   const b = $("pushKnopf"), h = $("pushHinweis");
-  b.textContent = S.erinnerungAn ? "🔕 Erinnerungen ausschalten" : "🔔 Erinnerungen einschalten";
+  b.textContent = S.erinnerungAn ? t("e.pushAus") : t("e.pushAn");
   b.classList.toggle("zweit", S.erinnerungAn);
   const teile = [];
-  if (istIos && !installiert) teile.push("Auf dem iPhone zuerst über Teilen → „Zum Home-Bildschirm“ installieren, dann hier einschalten.");
-  if (!("Notification" in window)) teile.push("Dieser Browser kann keine Benachrichtigungen zeigen.");
-  else if (Notification.permission === "denied") teile.push("Benachrichtigungen sind in den Browser-Einstellungen gesperrt.");
-  if (S.erinnerungAn) teile.push(pushKonfiguriert ? "Erinnerungen kommen auch bei geschlossener App." : "Push-Versand ist noch nicht eingerichtet: Erinnerungen kommen nur, solange die App geöffnet ist.");
+  if (istIos && !installiert) teile.push(t("p.iosInstall"));
+  if (!("Notification" in window)) teile.push(t("p.keinBrowser"));
+  else if (Notification.permission === "denied") teile.push(t("p.gesperrt"));
+  if (S.erinnerungAn) teile.push(pushKonfiguriert ? t("p.offline") : t("p.nichtEingerichtet"));
   h.textContent = teile.join(" ");
 }
 $("pushKnopf").onclick = async () => {
@@ -352,15 +370,15 @@ $("pushKnopf").onclick = async () => {
       if (fb) { try { await fb.db.ref("geraete/" + S.id).remove(); await fb.messaging.deleteToken(); } catch { /* egal */ } fb.token = null; }
       zeichnePushStatus(); return;
     }
-    if (!("Notification" in window)) { toast("Benachrichtigungen werden nicht unterstützt"); return; }
-    if ((await Notification.requestPermission()) !== "granted") { toast("Erlaubnis nicht erteilt"); zeichnePushStatus(); return; }
+    if (!("Notification" in window)) { toast(t("p.nichtUnterstuetzt")); return; }
+    if ((await Notification.requestPermission()) !== "granted") { toast(t("p.keineErlaubnis")); zeichnePushStatus(); return; }
     S.erinnerungAn = true; speichern();
     if (pushKonfiguriert) await tokenHolen();
-    toast("Erinnerungen sind an");
+    toast(t("p.an"));
     zeichnePushStatus();
   } catch (e) {
     console.warn(e); S.erinnerungAn = !!(fb && fb.token); speichern();
-    toast("Einschalten fehlgeschlagen: " + (e.message || e)); zeichnePushStatus();
+    toast(t("p.fehler", { grund: e.message || e })); zeichnePushStatus();
   }
 };
 
@@ -380,7 +398,7 @@ async function lokalPruefen() {
         lokalGemeldet.add(schluessel);
         const reg = await navigator.serviceWorker.ready;
         reg.showNotification(`🕌 ${g.name}`, {
-          body: S.vorlauf > 0 ? `${g.name} in ${S.vorlauf} Minuten (${uhrzeit(z[g.id], zone())})` : `${g.name}-Zeit ist da (${uhrzeit(z[g.id], zone())})`,
+          body: S.vorlauf > 0 ? t("p.vorher", { name: g.name, n: S.vorlauf, zeit: uhrzeit(z[g.id], zone()) }) : t("p.jetzt", { name: g.name, zeit: uhrzeit(z[g.id], zone()) }),
           tag: "gebet-" + schluessel, icon: "icons/icon-192.png", badge: "icons/icon-192.png",
         });
       }
@@ -388,19 +406,97 @@ async function lokalPruefen() {
   }
 }
 
+// ---------- Kalender (Hidschri + religiöse Tage) ----------
+let kalMonat = null;   // { y, m } des gezeigten Monats
+let kalAuswahl = null; // gewählter Tag { y, m, d }
+const SYMBOL = { bayram: "🎉", tag: "⭐", nacht: "🌙", vor: "🕋" };
+
+function kalTagText(e) {
+  const abend = e.art === "nacht" ? ` · ${t("c.abend")}` : "";
+  const mehr = e.von > 1 ? ` · ${t("c.tagN", { nr: e.nr, von: e.von })}` : "";
+  return `${t("f." + e.id)}${abend}${mehr}`;
+}
+
+function zeichneKalender() {
+  const heute = heuteAmOrt();
+  if (!kalMonat) kalMonat = { y: heute.y, m: heute.m };
+  if (!kalAuswahl) kalAuswahl = heute;
+  const erster = { y: kalMonat.y, m: kalMonat.m, d: 1 };
+  const tageImMonat = new Date(Date.UTC(kalMonat.y, kalMonat.m, 0)).getUTCDate();
+  $("kalMonat").textContent = new Date(mittagMs(erster)).toLocaleDateString(lokale(), { month: "long", year: "numeric", timeZone: "UTC" });
+  const h1 = hidschri(erster), h2 = hidschri({ ...erster, d: tageImMonat });
+  const monat = (h) => HIDSCHRI_MONATE[sprache][h.m - 1];
+  $("kalHidschri").textContent = h1.m === h2.m && h1.j === h2.j ? `${monat(h1)} ${h1.j}` : `${monat(h1)} ${h1.j} – ${monat(h2)} ${h2.j}`;
+
+  // Wochentage (Montag zuerst)
+  const montag = { y: 2026, m: 1, d: 5 };
+  $("kalKopf").innerHTML = Array.from({ length: 7 }, (_, i) => `<span class="wt">${new Date(mittagMs(plusTage(montag, i))).toLocaleDateString(lokale(), { weekday: "short", timeZone: "UTC" })}</span>`).join("");
+
+  const versatz = (wochentag(erster) + 6) % 7;
+  let zellen = "";
+  for (let i = 0; i < versatz; i++) zellen += `<span class="leer"></span>`;
+  for (let d = 1; d <= tageImMonat; d++) {
+    const tg = { y: kalMonat.y, m: kalMonat.m, d };
+    const ev = ereignisseAm(tg);
+    const art = ev.some((e) => e.art === "bayram") ? "bayram" : ev.some((e) => e.art === "nacht") ? "nacht" : ev.length ? "tag" : "";
+    const klassen = ["tag", art, gleicherTag(tg, heute) ? "heute" : "", gleicherTag(tg, kalAuswahl) ? "gewaehlt" : "", wochentag(tg) === 5 ? "freitag" : ""].filter(Boolean).join(" ");
+    zellen += `<button class="${klassen}" data-d="${d}"><b>${d}</b><small>${hidschri(tg).d}</small>${art ? `<i class="punkt-${art}"></i>` : ""}</button>`;
+  }
+  $("kalRaster").innerHTML = zellen;
+
+  // Details des gewählten Tages
+  const ev = ereignisseAm(kalAuswahl);
+  const hz = hidschriZeile(kalAuswahl);
+  $("kalDetail").innerHTML = `<div class="gross">${datumLang(kalAuswahl)}</div><div class="hid">${hz}</div>`
+    + (ev.length ? ev.map((e) => `<div class="ereignis"><span>${SYMBOL[e.art]}</span><div><b>${kalTagText(e)}</b><div class="klein">${t("f." + e.id + ".t")}</div></div></div>`).join("") : `<div class="klein">${t("c.keineTage")}</div>`)
+    + `<div class="hadith-klein">${hadithHtml(kalAuswahl)}</div>`
+    + (wochentag(kalAuswahl) === 5 ? `<div class="ereignis"><span>🕌</span><div class="klein">${t("c.freitag")}</div></div>` : "");
+
+  // Kommende Tage
+  const nae = naechsteEreignisse(heute, 8);
+  $("kalKommend").innerHTML = nae.map((e) => {
+    const n = tagsNummer(e.tag) - tagsNummer(heute);
+    const wann = n === 0 ? t("c.heuteTag") : n === 1 ? t("c.morgen") : t("c.inTagen", { n });
+    const datum = new Date(mittagMs(e.tag)).toLocaleDateString(lokale(), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+    return `<li data-j="${e.tag.y}" data-m="${e.tag.m}" data-tag="${e.tag.d}"><span class="sym">${SYMBOL[e.art]}</span><div class="namen"><div class="name">${kalTagText(e)}</div><div class="unter">${datum} · ${t("c.art." + e.art)}</div></div><div class="zeit klein">${wann}</div></li>`;
+  }).join("");
+}
+$("kalZurueck").onclick = () => { kalMonat = kalMonat.m === 1 ? { y: kalMonat.y - 1, m: 12 } : { y: kalMonat.y, m: kalMonat.m - 1 }; zeichneKalender(); };
+$("kalVor").onclick = () => { kalMonat = kalMonat.m === 12 ? { y: kalMonat.y + 1, m: 1 } : { y: kalMonat.y, m: kalMonat.m + 1 }; zeichneKalender(); };
+$("kalHeute").onclick = () => { const h = heuteAmOrt(); kalMonat = { y: h.y, m: h.m }; kalAuswahl = h; zeichneKalender(); };
+$("kalRaster").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-d]");
+  if (b) { kalAuswahl = { y: kalMonat.y, m: kalMonat.m, d: +b.dataset.d }; zeichneKalender(); }
+});
+$("kalKommend").addEventListener("click", (e) => {
+  const li = e.target.closest("li[data-j]");
+  if (li) { kalMonat = { y: +li.dataset.j, m: +li.dataset.m }; kalAuswahl = { y: +li.dataset.j, m: +li.dataset.m, d: +li.dataset.tag }; zeichneKalender(); $("kalDetail").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+});
+
+// ---------- Sprache ----------
+function alleZeichnen() {
+  uebersetzeSeite();
+  $("sprachSchalter").textContent = andereSprache().toUpperCase();
+  document.querySelectorAll(".sprachwahl button").forEach((b) => b.classList.toggle("aktivSprache", b.dataset.sprache === sprache));
+  zeichneEinstellungen(); zeichneZeiten(); zeichneKible(); zeichneTracker(); zeichneKalender();
+}
+function spracheWechseln(s) { setzeSprache(s); alleZeichnen(); }
+$("sprachSchalter").onclick = () => spracheWechseln(andereSprache());
+document.querySelector(".sprachwahl").addEventListener("click", (e) => { const b = e.target.closest("button[data-sprache]"); if (b) spracheWechseln(b.dataset.sprache); });
+
 // ---------- Start ----------
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch((e) => console.warn("sw", e));
 document.querySelectorAll(".k-striche").forEach((g) => {
   g.innerHTML = Array.from({ length: 36 }, (_, i) => `<line x1="0" y1="-100" x2="0" y2="${i % 9 === 0 ? -94 : -97}" transform="rotate(${i * 10})"/>`).join("");
 });
-zeichneEinstellungen(); zeichneZeiten(); zeichneKible(); zeichneTracker();
+alleZeichnen();
 referenzLaden(); eingebautLaden();
 if (S.erinnerungAn && pushKonfiguriert && "Notification" in window && Notification.permission === "granted") tokenHolen().catch((e) => console.warn(e));
 
 let letzterTag = tagSchluessel(heuteAmOrt());
 setInterval(() => {
-  const t = tagSchluessel(heuteAmOrt());
-  if (t !== letzterTag) { letzterTag = t; zeichneZeiten(); zeichneTracker(); } else zeichneNaechstes();
+  const tg = tagSchluessel(heuteAmOrt());
+  if (tg !== letzterTag) { letzterTag = tg; zeichneZeiten(); zeichneTracker(); zeichneKalender(); } else zeichneNaechstes();
   lokalPruefen();
 }, 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { referenzLaden(); zeichneZeiten(); lokalPruefen(); } });
