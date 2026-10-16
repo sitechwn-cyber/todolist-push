@@ -38,6 +38,22 @@ Semerkand-App selbst ist nicht belegt. Nächster Abgleich: eine Woche für Waibl
 in Semerkand ansehen, in `test.mjs` ergänzen und bei Abweichung die Minuten/Sommerregel anpassen.
 Pro Gerät lässt sich nachstellen unter *Mehr → Zeiten feinabstimmen*.
 
+## Offener Stand (16.10.2026) – hier weitermachen
+
+Die zweite Tabelle (`referenz/deutschland-ort-unklar-2026-10-15.csv`, Süddeutschland, 15.–21.10.2026) weicht
+von der Berechnung mit den Waiblingen-Koordinaten (48,83° N / 9,32° O) deutlich ab:
+- **Ort:** Bester Fit etwa 48,75° N / 9,90° O (Restabweichung < 1 Min), nicht Waiblingen. Passt zur Gegend
+  Schwäbisch Gmünd / Göppingen / Aalen. **Offene Frage an den Nutzer: welche Stadt war beim Export gewählt?**
+- **İmsak:** In dieser Tabelle liegt er ca. 5 Min früher als mit 18° (am Fit-Ort passt ≈ 18,8°, alle 7 Tage ±1 Min).
+  In İstanbul passte 18°. Ursache unbekannt (eigene Regel für Deutschland? Breitengrad?).
+- **Yatsı 17°** und die Korrekturminuten (Güneş −7, Öğle +6, İkindi +5, Akşam +9, Yatsı +2) passen auch hier.
+- **Fehlt noch:** eine Juni-Woche (Sommerregel für kurze Nächte) und optional Dezember/Januar für denselben Ort.
+  Erst damit klären, ob İmsak ein fester Winkel, eine Minutenkorrektur oder eine Breitengrad-Regel ist.
+- **Quelle von Semerkand ist nicht belegt.** Die Seite semerkandtakvimi.com war aus der Cloud-Umgebung nicht
+  erreichbar (Netzwerkrichtlinie). Auf dem PC: dort nach einer Methodenangabe suchen (FAQ, Einstellungen der App).
+- Noch nicht ausprobiert: Wochentabellen direkt von der Semerkand-Seite abrufen (Orte, Monate), dann
+  automatisch gegen `berechne()` vergleichen.
+
 ## Lokal ansehen
 
 `npm start` (oder `python3 -m http.server`) und `http://localhost:3000` öffnen. Service Worker und
