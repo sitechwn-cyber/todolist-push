@@ -97,11 +97,10 @@ Ohne diese Schritte funktioniert alles außer Erinnerungen bei **geschlossener**
 3. Projekteinstellungen → *Cloud Messaging* → *Web-Push-Zertifikate* → Schlüsselpaar erzeugen →
    öffentlichen Schlüssel als `VAPID_KEY` in `config.js`.
 4. Projekteinstellungen → *Dienstkonten* → „Neuen privaten Schlüssel generieren“ (JSON-Datei).
-   **Nie ins Git, nie in den Chat.** Inhalt als GitHub-Secret `FIREBASE_SERVICE_ACCOUNT`
-   (Settings → Secrets and variables → Actions → *New repository secret*) eintragen.
-5. Dieselbe Seite → *Variables* → `FIREBASE_DATABASE_URL` = Datenbank-Adresse (oder `databaseURL` in
-   `config.js` – dann nicht nötig).
-6. Actions → „Gebets-Push“ → *Run workflow* zum ersten Test. Lokal: `FIREBASE_SERVICE_ACCOUNT_DATEI=<Pfad>
+   **Nie ins Git, nie in den Chat.** Inhalt als GitHub-Secret `GEBETS_FIREBASE_SERVICE_ACCOUNT`
+   (nicht `FIREBASE_SERVICE_ACCOUNT` – das gehört der Todolist; Settings → Secrets and variables → Actions → *New repository secret*) eintragen.
+5. Dieselbe Seite → *Variables* → `GEBETS_FIREBASE_DATABASE_URL` = Datenbank-Adresse (ohne die Variable läuft der Workflow nicht).
+6. Actions → „Gebets-Push“ (`.github/workflows/gebets-push.yml` im Repo-Hauptordner) → *Run workflow* zum ersten Test. Lokal: `FIREBASE_SERVICE_ACCOUNT_DATEI=<Pfad>
    npm run probe` (schickt nichts, schreibt nichts).
 7. In der App: *Mehr → Erinnerungen einschalten*. **iPhone:** erst in Safari „Zum Home-Bildschirm“.
 

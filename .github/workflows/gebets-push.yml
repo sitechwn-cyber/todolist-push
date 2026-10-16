@@ -1,12 +1,15 @@
 name: Gebets-Push
 
+# Verschickt die Gebets-Erinnerungen der Gebets-App (Ordner gebets-app/).
+# Eigenes Firebase-Projekt, eigener Schlüssel – NICHT der der Todolist.
+# Läuft erst, wenn die Variable GEBETS_FIREBASE_DATABASE_URL gesetzt ist (sonst wird übersprungen).
 on:
   schedule:
     - cron: "*/5 * * * *"   # alle 5 Minuten (GitHub startet oft ein paar Minuten später)
   workflow_dispatch:         # „Run workflow“ zum Ausprobieren von Hand
 
 concurrency:
-  group: push
+  group: gebets-push
   cancel-in-progress: false
 
 permissions:
@@ -15,23 +18,28 @@ permissions:
 
 jobs:
   senden:
+    if: ${{ vars.GEBETS_FIREBASE_DATABASE_URL != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: gebets-app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: gebets-app/package-lock.json
       - run: npm ci --omit=dev
       - run: node sende.mjs
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          FIREBASE_DATABASE_URL: ${{ vars.FIREBASE_DATABASE_URL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.GEBETS_FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_DATABASE_URL: ${{ vars.GEBETS_FIREBASE_DATABASE_URL }}
       # GitHub schaltet Zeitpläne nach 60 Tagen ohne Änderung am Projekt ab.
       # Das erneute „Einschalten“ über die API setzt diese Frist zurück.
       - name: Wachhalten
         if: always()
-        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/push.yml/enable" || true
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/gebets-push.yml/enable" || true
         env:
           GH_TOKEN: ${{ github.token }}
