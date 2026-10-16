@@ -2,7 +2,7 @@
 //   node referenz-pruefen.mjs --suche Stuttgart          Orte in Deutschland (Almanya) suchen, zeigt IlceID
 //   node referenz-pruefen.mjs --suche Gmünd --land Türkiye
 //   node referenz-pruefen.mjs <IlceID>                   zeigt die nächsten Tage
-//   node referenz-pruefen.mjs <IlceID> referenz/deutschland-ort-unklar-2026-10-15.csv
+//   node referenz-pruefen.mjs <IlceID> referenz/deutschland-ort-unklar-2026-jahr.csv
 //                                                        vergleicht mit einer gespeicherten Tabelle (Minuten Unterschied)
 import { readFileSync } from "node:fs";
 import { holeLaender, holeStaedte, holeOrte, holeVakitler } from "./referenz.js";

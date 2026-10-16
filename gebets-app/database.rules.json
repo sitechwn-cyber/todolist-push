@@ -13,6 +13,7 @@
         "vorlauf": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 60" },
         "gebete": { "$g": { ".validate": "newData.isBoolean()" } },
         "korrektur": { "$g": { ".validate": "newData.isNumber() && newData.val() >= -30 && newData.val() <= 30" } },
+        "tabelle": { ".validate": "newData.isString() && newData.val().length < 40" },
         "diyanet": {
           ".validate": "newData.hasChildren(['ilce', 'zone'])",
           "ilce": { ".validate": "newData.isNumber() || (newData.isString() && newData.val().length < 20)" },

@@ -1,12 +1,13 @@
 import { GEBETE, naechstes, tagVon, tagPlus, tagSchluessel, uhrzeit, kibleRichtung, kibleEntfernung } from "./gebetszeiten.js";
 import { tagesZeiten, holeVakitler, holeLaender, holeStaedte, holeOrte } from "./referenz.js";
+import { ladeEingebaut } from "./daten/index.js";
 import { FIREBASE, VAPID_KEY } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
 const TAEGLICH = GEBETE.filter((g) => g.taeglich);
 
 const ORTE = [
-  { name: "Waiblingen", lat: 48.83, lon: 9.32, zone: "Europe/Berlin" },
+  { name: "Waiblingen", lat: 48.83, lon: 9.32, zone: "Europe/Berlin", tabelle: "waiblingen-2026" },
   { name: "Stuttgart", lat: 48.78, lon: 9.18, zone: "Europe/Berlin" },
   { name: "Berlin", lat: 52.52, lon: 13.4, zone: "Europe/Berlin" },
   { name: "Hamburg", lat: 53.55, lon: 10.0, zone: "Europe/Berlin" },
@@ -32,6 +33,7 @@ const standard = () => ({
 });
 let S = { ...standard(), ...lesen("gebet.einstellungen", {}) };
 S.korrektur = { ...standard().korrektur, ...S.korrektur };
+{ const vorgabe = ORTE.find((o) => o.name === S.ort.name && o.lat === S.ort.lat); if (vorgabe) S.ort = vorgabe; } // neue Felder (z. B. eingebaute Tabelle) übernehmen
 S.gebete = { ...standard().gebete, ...S.gebete };
 const speichern = () => schreiben("gebet.einstellungen", S);
 speichern();
@@ -58,7 +60,14 @@ const ortName = () => (S.diyanet && S.diyanet.name) || S.ort.name;
 // Referenztabelle der Diyanet (zuletzt geladen, auch offline nutzbar); fehlt ein Tag → eigene Berechnung
 let refTabelle = lesen("gebet.referenz", {});
 let refFehler = null;
-const tabelle = () => (S.diyanet && refTabelle.ilce === S.diyanet.ilce ? refTabelle.tage : undefined);
+// Reihenfolge: gewählter Diyanet-Ort → eingebaute Tabelle des Ortes (Waiblingen 2026) → Berechnung
+const eingebaut = {};
+const tabelle = () => S.diyanet ? (refTabelle.ilce === S.diyanet.ilce ? refTabelle.tage : undefined) : eingebaut[S.ort.tabelle];
+async function eingebautLaden() {
+  const n = S.ort.tabelle;
+  if (!n || eingebaut[n]) return;
+  try { eingebaut[n] = await ladeEingebaut(n); zeichneZeiten(); } catch (e) { console.warn("Tabelle", e); }
+}
 const tagZeiten = (tag) => tagesZeiten({ tag, zone: zone(), breite: S.ort.lat, laenge: S.ort.lon, korrektur: S.korrektur, tabelle: tabelle() });
 
 let tagVersatz = 0; // 0 = heute
@@ -89,8 +98,8 @@ function zeichneZeiten() {
     </li>`;
   }).join("");
   const fehler = refFehler ? " Die Diyanet-Zeiten konnten nicht geladen werden (" + refFehler + ")." : "";
-  $("rechenHinweis").textContent = quelle === "diyanet"
-    ? `Quelle: Diyanet (${S.diyanet.name}).${fehler}`
+  $("rechenHinweis").textContent = quelle === "tabelle"
+    ? (S.diyanet ? `Quelle: Diyanet (${S.diyanet.name}).${fehler}` : `Quelle: eingebaute Zeitentabelle ${S.ort.name} 2026.`)
     : S.diyanet
       ? `Für diesen Tag liegen keine Diyanet-Zeiten vor, die Zeit ist berechnet (Näherung).${fehler}`
       : `Berechnet für ${S.ort.name} (${S.ort.lat.toFixed(2)}° N, ${S.ort.lon.toFixed(2)}° O) – eine Näherung. Genau wie bei der Diyanet: unter „Mehr“ einen Diyanet-Ort wählen.`;
@@ -205,7 +214,7 @@ function zeichneEinstellungen() {
 }
 $("ortAuswahl").onchange = (e) => {
   if (e.target.value === "eigen") return;
-  S.ort = ORTE[+e.target.value]; aenderung(); // Diyanet-Ort bleibt (andere Zeitzone/Ort nur für Kıble und Rückfall)
+  S.ort = ORTE[+e.target.value]; eingebautLaden(); aenderung(); // Diyanet-Ort bleibt (andere Zeitzone/Ort nur für Kıble und Rückfall)
 };
 $("gpsKnopf").onclick = () => {
   if (!navigator.geolocation) { $("gpsHinweis").textContent = "Standort wird von diesem Gerät nicht unterstützt."; return; }
@@ -312,6 +321,7 @@ async function syncGeraet() {
       token: fb.token,
       lat: +S.ort.lat.toFixed(2), lon: +S.ort.lon.toFixed(2), zone: S.ort.zone,
       vorlauf: S.vorlauf, gebete: S.gebete, korrektur: S.korrektur, aktualisiert: Date.now(),
+      ...(S.ort.tabelle ? { tabelle: S.ort.tabelle } : {}),
       ...(S.diyanet ? { diyanet: { ilce: S.diyanet.ilce, zone: S.diyanet.zone } } : {}),
     });
   } catch (e) { console.warn("Sync fehlgeschlagen", e); }
@@ -383,7 +393,7 @@ document.querySelectorAll(".k-striche").forEach((g) => {
   g.innerHTML = Array.from({ length: 36 }, (_, i) => `<line x1="0" y1="-100" x2="0" y2="${i % 9 === 0 ? -94 : -97}" transform="rotate(${i * 10})"/>`).join("");
 });
 zeichneEinstellungen(); zeichneZeiten(); zeichneKible(); zeichneTracker();
-referenzLaden();
+referenzLaden(); eingebautLaden();
 if (S.erinnerungAn && pushKonfiguriert && "Notification" in window && Notification.permission === "granted") tokenHolen().catch((e) => console.warn(e));
 
 let letzterTag = tagSchluessel(heuteAmOrt());

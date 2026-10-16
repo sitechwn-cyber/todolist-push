@@ -82,7 +82,7 @@ nahe(kibleEntfernung(48.83, 9.32), 4070, 100, "Entfernung Waiblingen–Mekka");
   assert.deepEqual(leseVakitler(null), {});
   const tag = { y: 2026, m: 10, d: 15 };
   const r = tagesZeiten({ tag, zone: "Europe/Berlin", breite: 48.83, laenge: 9.32, tabelle: tab });
-  assert.equal(r.quelle, "diyanet");
+  assert.equal(r.quelle, "tabelle");
   assert.equal(uhrzeit(r.zeiten.imsak, "Europe/Berlin"), "05:49");
   assert.equal(uhrzeit(r.zeiten.yatsi, "Europe/Berlin"), "20:11");
   assert.equal(tagesZeiten({ tag, zone: "Europe/Berlin", breite: 48.83, laenge: 9.32, korrektur: { ogle: 3 }, tabelle: tab }).zeiten.ogle - r.zeiten.ogle, 3 * 60000, "Korrektur obendrauf");
@@ -102,5 +102,38 @@ nahe(kibleEntfernung(48.83, 9.32), 4070, 100, "Entfernung Waiblingen–Mekka");
   assert.equal(plane({ geraete: { a: gerat }, gesendet: {}, jetzt: ogleRef - 11 * 60000, tabellen: { 9999: tab } }).nachrichten.length, 0);
   // Referenz nicht erreichbar → Berechnung statt Absturz
   assert.equal(plane({ geraete: { a: gerat }, gesendet: {}, jetzt: berechne(tag, 48.83, 9.32).ogle, tabellen: {} }).nachrichten.length, 1, "Rückfall berechnet");
+}
+// Eingebaute Jahrestabelle (Waiblingen 2026, Diyanet-Format)
+{
+  const { default: jahr } = await import("./daten/waiblingen-2026.js");
+  assert.equal(Object.keys(jahr).length, 365);
+  const korr = (id) => ({});
+  assert.equal(jahr["2026-10-15"].imsak, "05:49");
+  assert.equal(jahr["2026-06-10"].imsak, "01:24", "Sternchen entfernt");
+  const z = (d) => tagesZeiten({ tag: { y: 2026, m: +d.slice(5, 7), d: +d.slice(8) }, zone: "Europe/Berlin", breite: 48.83, laenge: 9.32, tabelle: jahr });
+  for (let tag = 0; tag < 365; tag++) {
+    const t = tagPlus({ y: 2026, m: 1, d: 1 }, tag);
+    const { zeiten, quelle } = z(tagSchluessel(t));
+    assert.equal(quelle, "tabelle");
+    const reihe = GEBETE.map((g) => zeiten[g.id]);
+    for (let i = 1; i < reihe.length; i++) assert.ok(reihe[i] > reihe[i - 1], `Reihenfolge ${tagSchluessel(t)} ${GEBETE[i].id}`);
+  }
+  // Yatsı nach Mitternacht gehört ans Tagesende (1. Juni: 00:00 des 2. Juni)
+  const juni = z("2026-06-01").zeiten;
+  assert.equal(uhrzeit(juni.yatsi, "Europe/Berlin"), "00:00");
+  assert.equal(tagSchluessel(tagVon(juni.yatsi, "Europe/Berlin")), "2026-06-02");
+  // Zeitumstellung 29.03.: Öğle springt in der Uhrzeit von 12:32 auf 13:32
+  assert.equal(uhrzeit(z("2026-03-28").zeiten.ogle, "Europe/Berlin"), "12:32");
+  assert.equal(uhrzeit(z("2026-03-29").zeiten.ogle, "Europe/Berlin"), "13:32");
+  // Nächstes Gebet kurz nach Mitternacht im Sommer: Yatsı des Vortags (00:03) kommt noch
+  const nach = lokalZuMs({ y: 2026, m: 6, d: 4 }, "00:01", "Europe/Berlin");
+  const n2 = naechstes(nach, "Europe/Berlin", (t) => z(tagSchluessel(t)).zeiten);
+  assert.equal(n2.gebet.id, "yatsi");
+  // Erinnerung aus der eingebauten Tabelle
+  const geraet = { token: "T", lat: 48.83, lon: 9.32, zone: "Europe/Berlin", vorlauf: 10, gebete: { imsak: true }, korrektur: {}, tabelle: "waiblingen-2026" };
+  const um = lokalZuMs({ y: 2026, m: 10, d: 15 }, "05:49", "Europe/Berlin");
+  const pl = plane({ geraete: { a: geraet }, gesendet: {}, jetzt: um - 5 * 60000, eingebaut: { "waiblingen-2026": jahr } });
+  assert.equal(pl.nachrichten.length, 1);
+  assert.match(pl.nachrichten[0].text, /İmsak in 10 Minuten \(05:49\)/);
 }
 console.log("Alle Prüfungen bestanden.");

@@ -139,7 +139,8 @@ export function lokalZuMs(tag, hhmm, zone) {
  */
 export function naechstes(jetzt, zone, holen) {
   const heute = tagVon(jetzt, zone);
-  for (const tag of [heute, tagPlus(heute, 1)]) {
+  // gestern mitprüfen: Yatsı kann nach Mitternacht liegen (Sommer)
+  for (const tag of [tagPlus(heute, -1), heute, tagPlus(heute, 1)]) {
     const z = holen(tag);
     for (const g of GEBETE) if (z[g.id] > jetzt) return { gebet: g, zeit: z[g.id], tag };
   }

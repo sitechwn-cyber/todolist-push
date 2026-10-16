@@ -52,15 +52,22 @@ export const holeOrte = async (stadt, f) => (await holeJson(`/ilceler/${encodeUR
  * @param {number} p.breite    für die Rückfall-Berechnung
  * @param {number} p.laenge
  * @param {Object<string,number>} [p.korrektur]  persönliche Minuten je Gebet (immer obendrauf)
- * @param {Object} [p.tabelle]  Ergebnis von leseVakitler() (oder undefined)
- * @returns {{zeiten:Object<string,number>, quelle:"diyanet"|"berechnet"}}
+ * @param {Object} [p.tabelle]  Ergebnis von leseVakitler() bzw. eingebaute Tabelle (oder undefined)
+ * @returns {{zeiten:Object<string,number>, quelle:"tabelle"|"berechnet"}}  tabelle = Diyanet-Antwort oder eingebaute Tabelle
  */
 export function tagesZeiten({ tag, zone, breite, laenge, korrektur = {}, tabelle }) {
   const ref = tabelle && tabelle[tagSchluessel(tag)];
   if (ref) {
     const zeiten = {};
-    for (const g of GEBETE) zeiten[g.id] = lokalZuMs(tag, ref[g.id], zone) + (korrektur[g.id] || 0) * 60000;
-    return { zeiten, quelle: "diyanet" };
+    let davor = -Infinity;
+    for (const g of GEBETE) {
+      let ms = lokalZuMs(tag, ref[g.id], zone);
+      // Sommer in hohen Breiten: Yatsı nach Mitternacht (z. B. 00:03) gehört zum Ende dieses Tages
+      if (ms < davor) ms += 24 * 3600000;
+      davor = ms;
+      zeiten[g.id] = ms + (korrektur[g.id] || 0) * 60000;
+    }
+    return { zeiten, quelle: "tabelle" };
   }
   return { zeiten: berechne(tag, breite, laenge, minutenMit(korrektur)), quelle: "berechnet" };
 }

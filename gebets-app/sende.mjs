@@ -14,7 +14,8 @@ import { readFileSync } from "node:fs";
 import { initializeApp, cert } from "firebase-admin/app";
 import { getDatabase } from "firebase-admin/database";
 import { getMessaging } from "firebase-admin/messaging";
-import { plane, benoetigteOrte } from "./plane-push.mjs";
+import { plane, benoetigteOrte, benoetigteTabellen } from "./plane-push.mjs";
+import { ladeEingebaut } from "./daten/index.js";
 import { holeVakitler } from "./referenz.js";
 import { FIREBASE } from "./config.js";
 
@@ -35,7 +36,9 @@ const tabellen = {};
 for (const ilce of benoetigteOrte(geraete)) {
   try { tabellen[ilce] = await holeVakitler(ilce); } catch (e) { console.warn("Referenz nicht erreichbar, es wird berechnet:", e.message); }
 }
-const { nachrichten, merken } = plane({ geraete, gesendet, jetzt, tabellen });
+const eingebaut = {};
+for (const name of benoetigteTabellen(geraete)) eingebaut[name] = await ladeEingebaut(name);
+const { nachrichten, merken } = plane({ geraete, gesendet, jetzt, tabellen, eingebaut });
 // Das Protokoll ist öffentlich: nur Zahlen, keine Orte, keine Adressen.
 console.log(`Geräte: ${Object.keys(geraete).length}, Referenztabellen: ${Object.keys(tabellen).length}`);
 

@@ -24,9 +24,30 @@ statischen Hosting (GitHub Pages, Cloudflare Pages, Firebase Hosting).
 | `database.rules.json` | Datenbankregeln: Geräte dürfen nur ihren eigenen Eintrag schreiben, niemand liest |
 | `test.mjs` | `npm test` prüft Referenz-Lesen, Rückfall, Kıble und Versandplanung |
 | `referenz-pruefen.mjs` | **Auf dem PC mit Internet ausführen:** Schnittstelle prüfen, Orte suchen (`npm run referenz -- --suche Stuttgart`), mit Tabelle vergleichen |
-| `referenz/` | Echte Wochentabellen des Nutzers zum Abgleich (siehe README dort) |
+| `referenz/` | Echte Zeitentabellen des Nutzers (siehe README dort) |
+| `daten/`, `daten-bauen.mjs` | **Eingebaute Jahrestabelle Waiblingen 2026** (aus `referenz/…jahr.csv` erzeugt: `node daten-bauen.mjs <csv> <name>`) |
 
-## Gebetszeiten: Referenz Diyanet, Rückfall Berechnung
+## Gebetszeiten: Reihenfolge der Quellen
+
+1. **Diyanet-Ort gewählt** (*Mehr → Diyanet-Zeiten*) → Tabelle von der Schnittstelle (s. u., ungeprüft).
+2. **Standard-Ort Waiblingen** → **eingebaute Jahrestabelle 2026** (`daten/waiblingen-2026.js`, 365 Tage, vom Nutzer
+   geliefert, enthält die Diyanet-Sommerregel: İmsak 01:24 / Yatsı 00:03 gehalten vom 3.6.–8.7., Yatsı nach
+   Mitternacht wird dem Tagesende zugerechnet, Zeitumstellung 29.3./25.10. steckt in den Uhrzeiten). Läuft ohne
+   Internet, auch bei den Push-Erinnerungen (Gerätefeld `tabelle`).
+3. **sonst / Tag fehlt** → Berechnung (Rückfall). **Ab 1.1.2027 gibt es für Waiblingen nur noch die Berechnung** →
+   vorher eine neue Jahrestabelle holen und mit `daten-bauen.mjs` einbauen (Eintrag in `daten/index.js`).
+
+Die Herkunft der Tabelle (Diyanet oder Semerkand) und der genaue Ort sind nicht in der Datei vermerkt. Im Juni
+steht `*` für „Wert gehalten“ – das ist die Diyanet-Schreibweise, spricht also für Diyanet, belegt es aber nicht.
+Prüfen: dieselbe Stadt auf namazvakitleri.diyanet.gov.tr öffnen und z. B. den 15.10.2026 vergleichen
+(İmsak 05:49, Yatsı 20:11).
+
+Genauigkeit der Berechnung (Rückfall) gegen die Jahrestabelle bei 48,83° N / 9,32° O: Güneş/Öğle/İkindi/Akşam
+±3 Min das ganze Jahr, **İmsak im Sommer bis 100 Min daneben** (Diyanet hält den Wert, die Berechnung teilt die
+Nacht) und Yatsı bis 26 Min. Wer die Berechnung verbessern will: Diyanet-Halteregel nachbauen (Wert des letzten
+Tages halten, an dem der Winkel erreicht wurde).
+
+## Gebetszeiten: Referenz Diyanet (Schnittstelle), Rückfall Berechnung
 
 **Referenz (Standard, seit 16.10.2026):** In der App unter *Mehr → Diyanet-Zeiten* Land → Stadt → Ort wählen
 (Deutschland ist vorgewählt). Die App holt die Tagestabelle von `https://ezanvakti.emushaf.net/vakitler/<IlceID>`
@@ -45,7 +66,7 @@ Die Cloud-Umgebung, in der das gebaut wurde, hatte kein Internet zu `ezanvakti.e
 und das Datumsformat sind nach bestem Wissen umgesetzt und mit einer nachgebauten Antwort getestet
 (`test.mjs`, Browsertest). **Als Erstes auf dem PC prüfen:**
 1. `npm run referenz -- --suche Stuttgart` (Ort und IlceID finden; Schnittstelle erreichbar?)
-2. `npm run referenz -- <IlceID> referenz/deutschland-ort-unklar-2026-10-15.csv` – muss „✔ alle Werte gleich“
+2. `npm run referenz -- <IlceID> referenz/deutschland-ort-unklar-2026-jahr.csv` – muss „✔ alle Werte gleich“
    melden, sonst stimmt Ort oder Datenquelle nicht.
 3. Im Browser: läuft der Abruf, oder blockiert CORS die Anfrage? Dann liefert die App die berechneten Zeiten und
    zeigt „konnten nicht geladen werden“. Abhilfe: Cloudflare-Worker als Zwischenstation (siehe Projekt
@@ -55,7 +76,7 @@ und das Datumsformat sind nach bestem Wissen umgesetzt und mit einer nachgebaute
    vergleichen.
 
 ### Befunde zur Berechnung (Stand 16.10.2026)
-- Zweite Tabelle (`referenz/deutschland-ort-unklar-2026-10-15.csv`, Süddeutschland): bester Fit 48,75° N /
+- Zweite Tabelle (`referenz/deutschland-ort-unklar-2026-jahr.csv`, Süddeutschland): bester Fit 48,75° N /
   9,90° O (nicht Waiblingen; Gegend Schwäbisch Gmünd/Göppingen/Aalen), İmsak ≈ 18,8°, Yatsı 17° und die
   Korrekturminuten passen. Ort der Tabelle: **offen** (Nutzer fragen).
 - Fehlt: Juni-Woche (Sommerregel) und Dezember/Januar für denselben Ort.
