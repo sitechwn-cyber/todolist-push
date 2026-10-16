@@ -1,9 +1,77 @@
-:root {
-  --bg: #f4f1e8; --karte: #ffffff; --text: #17301f; --leise: #5c6f62; --linie: #dcd6c3;
-  --gruen: #0f3d2e; --gruen2: #1d6b4f; --gold: #c9a24b; --ok: #1f8f5f; --kopf: #0f3d2e; --kopftext: #f4f1e8;
+/* ===== SiTech Glas – gemeinsamer Grundbaustein (Stand 07.10.2026) =====
+   Vorlage: SiTech Cockpit, Design "Glas". Quelle dieser Datei:
+   C:\Users\yasin\Claude\Gemeinsam\Design\SiTech-Glas\sitech-glas.css
+   Wird in jede SiTech-App in den <style>-Block kopiert (nicht verlinkt: _Gemeinsam
+   wird nicht hochgeladen). Alle Namen beginnen mit --sg- bzw. .sg-, damit sie nicht
+   mit den Farbnamen der App kollidieren. Dunkel ist Standard, Hell über
+   data-theme="light" oder die Geräte-Einstellung (beide Hell-Blöcke gleich halten). */
+:root{
+  color-scheme:dark;
+  --sg-ground:#07080B; --sg-ground2:#0D0F13;
+  --sg-text:#ECEFF1; --sg-muted:#A4A9AF; --sg-faint:#6B7178;
+  --sg-panel:rgba(255,255,255,.05); --sg-panel2:rgba(255,255,255,.08); --sg-border:rgba(255,255,255,.10);
+  --sg-modal:#121419; --sg-input:rgba(0,0,0,.30); --sg-input-schatten:0 2px 6px rgba(0,0,0,.55) inset,0 1px 0 rgba(255,255,255,.05);
+  --sg-accent:#D9AE72; --sg-accent-soft:rgba(217,174,114,.16); --sg-accent-ink:#1B1406;
+  --sg-messing:linear-gradient(135deg,#E8C48E,#C99A5A); --sg-link:#E8C48E;
+  --sg-danger:#E0583F; --sg-success:#6CC08B; --sg-warning:#E6B54A; --sg-info:#6E9BD8; --sg-teal:#4FB3A9;
+  --sg-karte:linear-gradient(160deg,rgba(255,255,255,.075) 0%,rgba(255,255,255,.022) 45%,rgba(0,0,0,.16) 100%);
+  --sg-karte-schatten:0 1px 0 rgba(255,255,255,.10) inset,0 2px 4px rgba(0,0,0,.40),0 12px 24px -10px rgba(0,0,0,.65);
+  --sg-glow:rgba(217,174,114,.45); --sg-lichtkante:rgba(232,196,142,.8);
+  --sg-display:"Chakra Petch","Arial Narrow",Arial,sans-serif;
+  --sg-body:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --sg-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --sg-hintergrund:
+    radial-gradient(520px 420px at 82% 58%,rgba(217,174,114,.20),transparent 70%),
+    radial-gradient(420px 360px at 15% 82%,rgba(224,122,95,.11),transparent 70%),
+    radial-gradient(520px 420px at 92% 6%,rgba(110,155,216,.10),transparent 70%),
+    linear-gradient(180deg,#0D0F13,#07080B);
 }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #0b1a14; --karte: #13261d; --text: #ecf2ec; --leise: #93a89b; --linie: #254035; --gruen2: #3aa379; --kopf: #0a2a1f; }
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  color-scheme:light;
+  --sg-ground:#F3EFE8; --sg-ground2:#FBF9F5;
+  --sg-text:#1B1E21; --sg-muted:#5E6670; --sg-faint:#8A9097;
+  --sg-panel:rgba(255,255,255,.72); --sg-panel2:rgba(255,255,255,.95); --sg-border:rgba(27,30,33,.11);
+  --sg-modal:#FFFFFF; --sg-input:#FFFFFF; --sg-input-schatten:0 1px 2px rgba(27,30,33,.08) inset;
+  --sg-accent:#A3702C; --sg-accent-soft:rgba(169,117,50,.13); --sg-link:#8A5A1F;
+  --sg-danger:#C0463B; --sg-success:#2E8B57; --sg-warning:#B7791F; --sg-info:#3F6FB5; --sg-teal:#2C8C83;
+  --sg-karte:linear-gradient(160deg,rgba(255,255,255,.95),rgba(255,255,255,.78));
+  --sg-karte-schatten:0 1px 0 rgba(255,255,255,.9) inset,0 1px 2px rgba(27,30,33,.06),0 10px 24px -14px rgba(27,30,33,.28);
+  --sg-glow:rgba(169,117,50,.25); --sg-lichtkante:rgba(201,154,90,.7);
+  --sg-hintergrund:radial-gradient(620px 460px at 85% 0%,rgba(217,174,114,.22),transparent 70%),radial-gradient(520px 420px at 0% 100%,rgba(224,122,95,.08),transparent 70%),linear-gradient(180deg,#FBF9F5,#F3EFE8);
+}}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --sg-ground:#F3EFE8; --sg-ground2:#FBF9F5;
+  --sg-text:#1B1E21; --sg-muted:#5E6670; --sg-faint:#8A9097;
+  --sg-panel:rgba(255,255,255,.72); --sg-panel2:rgba(255,255,255,.95); --sg-border:rgba(27,30,33,.11);
+  --sg-modal:#FFFFFF; --sg-input:#FFFFFF; --sg-input-schatten:0 1px 2px rgba(27,30,33,.08) inset;
+  --sg-accent:#A3702C; --sg-accent-soft:rgba(169,117,50,.13); --sg-link:#8A5A1F;
+  --sg-danger:#C0463B; --sg-success:#2E8B57; --sg-warning:#B7791F; --sg-info:#3F6FB5; --sg-teal:#2C8C83;
+  --sg-karte:linear-gradient(160deg,rgba(255,255,255,.95),rgba(255,255,255,.78));
+  --sg-karte-schatten:0 1px 0 rgba(255,255,255,.9) inset,0 1px 2px rgba(27,30,33,.06),0 10px 24px -14px rgba(27,30,33,.28);
+  --sg-glow:rgba(169,117,50,.25); --sg-lichtkante:rgba(201,154,90,.7);
+  --sg-hintergrund:radial-gradient(620px 460px at 85% 0%,rgba(217,174,114,.22),transparent 70%),radial-gradient(520px 420px at 0% 100%,rgba(224,122,95,.08),transparent 70%),linear-gradient(180deg,#FBF9F5,#F3EFE8);
+}
+/* Grund: Hintergrund mit Leuchten, Schriften */
+body{background:var(--sg-ground);color:var(--sg-text);font-family:var(--sg-body)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--sg-hintergrund)}
+:focus-visible{outline:2px solid var(--sg-accent);outline-offset:2px}
+::selection{background:var(--sg-accent-soft)}
+*{scrollbar-width:thin;scrollbar-color:var(--sg-border) transparent}
+/* Bausteine zum Wiederverwenden */
+.sg-glas{background:var(--sg-karte);border:1px solid var(--sg-border);box-shadow:var(--sg-karte-schatten)}
+.sg-mark{flex:none;width:38px;height:38px;border-radius:50%;display:inline-grid;place-items:center;background:var(--sg-messing);color:var(--sg-accent-ink);font-family:var(--sg-display);font-weight:700;font-size:16px;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 0 22px 2px var(--sg-glow)}
+/* Schalter Hell/Dunkel (oben rechts, falls die App ihn nicht selbst einbaut) */
+.sg-schalter{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:60;width:38px;height:38px;border-radius:50%;
+  border:1px solid var(--sg-border);background:var(--sg-karte);color:var(--sg-text);box-shadow:var(--sg-karte-schatten);cursor:pointer;font-size:16px;line-height:1;display:grid;place-items:center;padding:0}
+.sg-schalter:hover{border-color:var(--sg-accent)}
+.sg-schalter.sg-inline{position:static}
+/* ===== Ende SiTech Glas Grundbaustein ===== */
+
+/* Farbnamen der App auf SiTech Glas umgebogen */
+:root {
+  --bg: var(--sg-ground); --karte: var(--sg-modal); --text: var(--sg-text); --leise: var(--sg-muted); --linie: var(--sg-border);
+  --gruen: var(--sg-accent); --gruen2: var(--sg-accent); --gold: var(--sg-accent); --ok: #2E8B57; --kopf: transparent; --kopftext: var(--sg-text);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -90,3 +158,33 @@ select, input[type=number] { width: 100%; padding: 12px; font-size: 1rem; border
 
 .toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 20px; font-size: .9rem; opacity: 0; pointer-events: none; transition: .25s; max-width: 90vw; text-align: center; }
 .toast.zeigen { opacity: 1; transform: translate(-50%, 0); }
+
+/* ===== SiTech Glas: Bauteile der Gebets-App ===== */
+html { background: var(--sg-ground); }
+html, body { font-family: var(--sg-body); }
+body { background: transparent; }
+h2 { font-family: var(--sg-display); letter-spacing: .04em; text-transform: uppercase; font-size: .9rem; color: var(--sg-accent); }
+.kopf { background: transparent; align-items: center; }
+.ort { font-family: var(--sg-display); letter-spacing: .02em; }
+.hidschri { color: var(--sg-accent); }
+.tagwahl { align-items: center; }
+.tagwahl button { background: var(--sg-karte); border: 1px solid var(--sg-border); box-shadow: var(--sg-karte-schatten); border-radius: 999px; color: var(--sg-text); }
+.naechstes { background: var(--sg-karte); border: 1px solid var(--sg-border); border-top-color: var(--sg-lichtkante); box-shadow: var(--sg-karte-schatten), 0 0 40px -12px var(--sg-glow); color: var(--sg-text); border-radius: 20px; }
+.naechstes .klein { color: var(--sg-muted); opacity: 1; }
+.naechstes .gross { font-family: var(--sg-display); }
+.naechstes .zeit { font-family: var(--sg-mono); font-weight: 500; color: var(--sg-accent); }
+.naechstes .rest { color: var(--sg-text); font-family: var(--sg-mono); }
+.liste, .kachel, .raster { background: var(--sg-karte); border: 1px solid var(--sg-border); box-shadow: var(--sg-karte-schatten); }
+.liste li.jetzt { background: var(--sg-accent-soft); }
+.liste .zeit, .kachel .gross, .kible-info .gross { font-family: var(--sg-mono); }
+.haken, .punkt { color: #fff; }
+.knopf { background: var(--sg-messing); color: var(--sg-accent-ink); border-radius: 999px; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 0 18px -4px var(--sg-glow); }
+.knopf.zweit { background: transparent; color: var(--sg-accent); border: 1px solid var(--sg-accent); box-shadow: none; }
+select, input[type=number] { background: var(--sg-input); box-shadow: var(--sg-input-schatten); border: 1px solid var(--sg-border); color: var(--sg-text); }
+.schalter-liste input { accent-color: var(--sg-accent); }
+.k-ring { fill: var(--sg-input); }
+.k-n { fill: var(--sg-danger); }
+.leiste { background: var(--sg-modal); background: color-mix(in srgb, var(--sg-modal) 82%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid var(--sg-border); }
+.leiste button.aktiv { color: var(--sg-accent); }
+.toast { background: var(--sg-modal); color: var(--sg-text); border: 1px solid var(--sg-border); box-shadow: var(--sg-karte-schatten); }
+@media print { body::before, .sg-schalter { display: none; } }

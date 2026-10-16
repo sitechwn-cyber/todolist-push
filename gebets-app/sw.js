@@ -1,6 +1,6 @@
 // Service Worker: App offline verfügbar machen + Push-Nachrichten anzeigen.
 // WICHTIG: Jede Push-Nachricht muss sichtbar angezeigt werden, sonst entzieht Safari am iPhone die Erlaubnis.
-const VERSION = "gebet-v3";
+const VERSION = "gebet-v4";
 const DATEIEN = ["./", "index.html", "app.css", "app.js", "gebetszeiten.js", "referenz.js", "daten/index.js", "daten/waiblingen-2026.js", "config.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {

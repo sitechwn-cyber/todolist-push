@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gebetszeiten</title>
 <meta name="description" content="Gebetszeiten, Kıble-Kompass, Erinnerungen und Gebets-Tracker">
-<meta name="theme-color" content="#0f3d2e">
+<meta name="theme-color" content="#07080B">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -13,7 +13,42 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gebet">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css">
+<script>
+// ===== SiTech Glas – Hell/Dunkel-Schalter (Stand 07.10.2026) =====
+// Quelle: C:\Users\yasin\Claude\Gemeinsam\Design\SiTech-Glas\sitech-glas-theme.js
+// Gehört als <script> direkt hinter den <style>-Block im <head> (setzt das Thema,
+// bevor die Seite gezeichnet wird – kein Aufblitzen). Der Knopf ist ein Element mit
+// id="sgSchalter" und onclick="sgThemeUmschalten()". Gemerkt wird die Wahl im
+// localStorage ("sitech_theme"), ohne Wahl gilt die Einstellung des Geräts.
+(function () {
+  var K = "sitech_theme";
+  function gespeichert() { try { return localStorage.getItem(K) || ""; } catch (e) { return ""; } }
+  function aktuell() {
+    var s = gespeichert();
+    if (s === "light" || s === "dark") return s;
+    return window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+  function setzen(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.content = t === "light" ? "#F3EFE8" : "#07080B";
+    var b = document.getElementById("sgSchalter");
+    if (b) { b.textContent = t === "light" ? "🌙" : "☀️"; b.title = t === "light" ? "Dunkle Ansicht" : "Helle Ansicht"; }
+  }
+  window.sgThemeUmschalten = function () {
+    var n = aktuell() === "dark" ? "light" : "dark";
+    try { localStorage.setItem(K, n); } catch (e) {}
+    setzen(n);
+  };
+  setzen(aktuell());
+  document.addEventListener("DOMContentLoaded", function () { setzen(aktuell()); });
+  if (window.matchMedia) matchMedia("(prefers-color-scheme: light)").addEventListener("change", function () { if (!gespeichert()) setzen(aktuell()); });
+})();
+</script>
 </head>
 <body>
 <header class="kopf">
@@ -26,6 +61,7 @@
     <button id="tagZurueck" aria-label="Vorheriger Tag">‹</button>
     <button id="tagHeute">Heute</button>
     <button id="tagVor" aria-label="Nächster Tag">›</button>
+    <button type="button" id="sgSchalter" class="sg-schalter sg-inline" onclick="sgThemeUmschalten()">☀️</button>
   </div>
 </header>
 
