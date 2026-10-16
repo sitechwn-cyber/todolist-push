@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gebetszeiten</title>
+<meta name="description" content="Gebetszeiten, Kıble-Kompass, Erinnerungen und Gebets-Tracker">
+<meta name="theme-color" content="#07080B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gebet">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<script>
+// ===== SiTech Glas – Hell/Dunkel-Schalter (Stand 07.10.2026) =====
+// Quelle: C:\Users\yasin\Claude\Gemeinsam\Design\SiTech-Glas\sitech-glas-theme.js
+// Gehört als <script> direkt hinter den <style>-Block im <head> (setzt das Thema,
+// bevor die Seite gezeichnet wird – kein Aufblitzen). Der Knopf ist ein Element mit
+// id="sgSchalter" und onclick="sgThemeUmschalten()". Gemerkt wird die Wahl im
+// localStorage ("sitech_theme"), ohne Wahl gilt die Einstellung des Geräts.
+(function () {
+  var K = "sitech_theme";
+  function gespeichert() { try { return localStorage.getItem(K) || ""; } catch (e) { return ""; } }
+  function aktuell() {
+    var s = gespeichert();
+    if (s === "light" || s === "dark") return s;
+    return window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+  function setzen(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.content = t === "light" ? "#F3EFE8" : "#07080B";
+    var b = document.getElementById("sgSchalter");
+    if (b) { b.textContent = t === "light" ? "🌙" : "☀️"; b.title = t === "light" ? "Dunkle Ansicht" : "Helle Ansicht"; }
+  }
+  window.sgThemeUmschalten = function () {
+    var n = aktuell() === "dark" ? "light" : "dark";
+    try { localStorage.setItem(K, n); } catch (e) {}
+    setzen(n);
+  };
+  setzen(aktuell());
+  document.addEventListener("DOMContentLoaded", function () { setzen(aktuell()); });
+  if (window.matchMedia) matchMedia("(prefers-color-scheme: light)").addEventListener("change", function () { if (!gespeichert()) setzen(aktuell()); });
+})();
+</script>
+</head>
+<body>
+<header class="kopf">
+  <div>
+    <div class="ort" id="ortName">…</div>
+    <div class="datum" id="datumText"></div>
+    <div class="hidschri" id="hidschriText"></div>
+  </div>
+  <div class="tagwahl">
+    <button id="tagZurueck" aria-label="Vorheriger Tag">‹</button>
+    <button id="tagHeute">Heute</button>
+    <button id="tagVor" aria-label="Nächster Tag">›</button>
+    <button type="button" id="sgSchalter" class="sg-schalter sg-inline" onclick="sgThemeUmschalten()">☀️</button>
+  </div>
+</header>
+
+<main>
+  <!-- ZEITEN -->
+  <section id="tab-zeiten" class="seite aktiv">
+    <div class="naechstes" id="naechstesKarte">
+      <div class="klein">Nächstes Gebet</div>
+      <div class="gross" id="naechstesName">–</div>
+      <div class="zeit" id="naechstesZeit">–</div>
+      <div class="rest" id="naechstesRest">–</div>
+    </div>
+    <ul class="liste" id="zeitenListe"></ul>
+    <p class="hinweis" id="rechenHinweis"></p>
+  </section>
+
+  <!-- KIBLE -->
+  <section id="tab-kible" class="seite">
+    <div class="kompass" id="kompass">
+      <svg viewBox="-110 -110 220 220" aria-hidden="true">
+        <circle r="104" class="k-ring"/>
+        <g id="kompassRose">
+          <text y="-86" class="k-n">N</text>
+          <text x="86" class="k-w">O</text>
+          <text y="94" class="k-w">S</text>
+          <text x="-86" class="k-w">W</text>
+          <g class="k-striche"></g>
+        </g>
+        <g id="kibleZeiger">
+          <polygon points="0,-92 11,-60 0,-68 -11,-60" class="k-pfeil"/>
+          <line x1="0" y1="-60" x2="0" y2="30" class="k-linie"/>
+          <circle cy="46" r="7" class="k-pfeil"/>
+        </g>
+        <circle r="4" class="k-mitte"/>
+      </svg>
+    </div>
+    <div class="kible-info">
+      <div class="gross" id="kibleGrad">–</div>
+      <div id="kibleText" class="klein"></div>
+    </div>
+    <button class="knopf" id="kompassStart">Kompass einschalten</button>
+    <p class="hinweis" id="kibleHinweis">Halte das Handy flach und weit weg von Metall und Magneten. Ist der Pfeil oben und grün, schaust du Richtung Kaaba.</p>
+  </section>
+
+  <!-- TRACKER -->
+  <section id="tab-tracker" class="seite">
+    <div class="kacheln">
+      <div class="kachel"><div class="gross" id="trkHeute">0/5</div><div class="klein">heute</div></div>
+      <div class="kachel"><div class="gross" id="trkSerie">0</div><div class="klein">Tage in Folge</div></div>
+      <div class="kachel"><div class="gross" id="trkWoche">0%</div><div class="klein">letzte 7 Tage</div></div>
+    </div>
+    <div class="raster" id="trkRaster"></div>
+    <p class="hinweis">Tippe auf einen Punkt, um ein Gebet nachzutragen. Die Daten bleiben nur auf diesem Gerät.</p>
+  </section>
+
+  <!-- EINSTELLUNGEN -->
+  <section id="tab-einstellungen" class="seite">
+    <h2>Diyanet-Zeiten (Wahl)</h2>
+    <p class="hinweis">Standard sind deine Semerkand-Zeiten (Waiblingen) bzw. die Berechnung. Wählst du hier einen Ort aus der Diyanet-Liste, zeigt die App stattdessen genau die Zeiten der Diyanet (Internet nötig, wird zwischengespeichert).</p>
+    <label class="feld">Land <select id="dLand"><option value="">Antippen zum Laden</option></select></label>
+    <label class="feld">Stadt <select id="dStadt"><option value="">Stadt wählen</option></select></label>
+    <label class="feld">Ort <select id="dOrt"><option value="">Ort wählen</option></select></label>
+    <p class="hinweis" id="dStatus"></p>
+    <button class="knopf zweit" id="dEntfernen" style="display:none">Diyanet-Ort entfernen (zurück zu Semerkand/Berechnung)</button>
+
+    <h2>Standort (Kıble und Rückfall)</h2>
+    <label class="feld">Stadt
+      <select id="ortAuswahl"></select>
+    </label>
+    <button class="knopf zweit" id="gpsKnopf">📍 Meinen Standort verwenden</button>
+    <p class="hinweis" id="gpsHinweis"></p>
+
+    <h2>Erinnerung</h2>
+    <label class="feld">Wie früh?
+      <select id="vorlauf">
+        <option value="0">zur Gebetszeit</option>
+        <option value="5">5 Minuten vorher</option>
+        <option value="10">10 Minuten vorher</option>
+        <option value="15">15 Minuten vorher</option>
+        <option value="30">30 Minuten vorher</option>
+      </select>
+    </label>
+    <div class="schalter-liste" id="erinnerungGebete"></div>
+    <button class="knopf" id="pushKnopf">🔔 Erinnerungen einschalten</button>
+    <p class="hinweis" id="pushHinweis"></p>
+
+    <h2>Zeiten feinabstimmen</h2>
+    <p class="hinweis">Minuten, die zu jeder Zeit addiert werden (auch zu den Diyanet-Zeiten). Normalerweise bei 0 lassen.</p>
+    <div class="minuten" id="minutenFelder"></div>
+    <button class="knopf zweit" id="minutenZurueck">Auf 0 zurücksetzen</button>
+
+    <h2>Über</h2>
+    <p class="hinweis">Die Zeiten kommen aus deiner Semerkand-Tabelle (Waiblingen 2026) oder, wenn gewählt, von der Diyanet. Sonst rechnet die App selbst aus dem Sonnenstand (Näherung). Kein Konto, keine Werbung.</p>
+  </section>
+</main>
+
+<nav class="leiste">
+  <button data-tab="zeiten" class="aktiv"><span>🕌</span>Zeiten</button>
+  <button data-tab="kible"><span>🧭</span>Kıble</button>
+  <button data-tab="tracker"><span>✅</span>Tracker</button>
+  <button data-tab="einstellungen"><span>⚙️</span>Mehr</button>
+</nav>
+
+<div id="toast" class="toast" role="status"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

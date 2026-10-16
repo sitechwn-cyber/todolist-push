@@ -1,0 +1,45 @@
+name: Gebets-App veröffentlichen
+
+# Veröffentlicht den Ordner gebets-app/ als Webseite (GitHub Pages).
+# Einmalig nötig: GitHub → Settings → Pages → Source: „GitHub Actions“.
+# Adresse danach: https://<benutzer>.github.io/<repo>/  (z. B. …/todolist-push/)
+on:
+  push:
+    branches: [main]
+    paths: ["gebets-app/**", ".github/workflows/gebets-app-pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  veroeffentlichen:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prüfen
+        run: node gebets-app/test.mjs
+      - name: Nur die Dateien der App einsammeln
+        run: |
+          mkdir _site
+          cd gebets-app
+          cp index.html app.css app.js config.js gebetszeiten.js referenz.js sw.js manifest.webmanifest ../_site/
+          cp -r icons daten ../_site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

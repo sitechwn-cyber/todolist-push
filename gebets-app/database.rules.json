@@ -1,0 +1,28 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "geraete": {
+      "$id": {
+        ".write": "$id.matches(/^[a-z0-9]{8,40}$/) && (!newData.exists() || newData.hasChildren(['token', 'lat', 'lon', 'zone']))",
+        ".validate": "newData.hasChildren(['token', 'lat', 'lon', 'zone', 'vorlauf', 'gebete', 'korrektur', 'aktualisiert'])",
+        "token": { ".validate": "newData.isString() && newData.val().length < 400" },
+        "lat": { ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90" },
+        "lon": { ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180" },
+        "zone": { ".validate": "newData.isString() && newData.val().length < 40" },
+        "vorlauf": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 60" },
+        "gebete": { "$g": { ".validate": "newData.isBoolean()" } },
+        "korrektur": { "$g": { ".validate": "newData.isNumber() && newData.val() >= -30 && newData.val() <= 30" } },
+        "tabelle": { ".validate": "newData.isString() && newData.val().length < 40" },
+        "diyanet": {
+          ".validate": "newData.hasChildren(['ilce', 'zone'])",
+          "ilce": { ".validate": "newData.isNumber() || (newData.isString() && newData.val().length < 20)" },
+          "zone": { ".validate": "newData.isString() && newData.val().length < 40" },
+          "$andere": { ".validate": false }
+        },
+        "aktualisiert": { ".validate": "newData.isNumber()" },
+        "$andere": { ".validate": false }
+      }
+    }
+  }
+}
