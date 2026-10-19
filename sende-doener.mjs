@@ -4,6 +4,7 @@
 // doener-logik.mjs und werden von test-doener.mjs geprüft.
 //
 // Liest:   orders/, pushgeraete/doener/, staff/doener/
+// Abschluss (00:00, siehe doener-abschluss.mjs): legt Bestellungen früherer Tage als Bericht nach archiv/doener/ und löscht sie.
 // Merkt:   push/gesendet/<orderId> (nur für dieses Skript, in den Datenbankregeln gesperrt)
 //
 // Zugang: Dienstkonto-Schlüssel des Projekts tekke-55b28, als GitHub-Secret
@@ -16,6 +17,7 @@ import { initializeApp, cert } from "firebase-admin/app";
 import { getDatabase } from "firebase-admin/database";
 import { getMessaging } from "firebase-admin/messaging";
 import { plane } from "./doener-logik.mjs";
+import { planeAbschluss, tagVon } from "./doener-abschluss.mjs";
 
 const PROBE = process.argv.includes("--probe");
 const zugang = process.env.FIREBASE_SERVICE_ACCOUNT_DOENER
@@ -64,5 +66,24 @@ if (!PROBE) {
   if (kaputt.size) await db.ref("pushgeraete/doener").update(Object.fromEntries([...kaputt].map((id) => [id, null])));
   await db.ref("push/letzterLauf").set(jetzt);
 } else if (kaputt.size) console.log(`PROBE würde ${kaputt.size} Gerät(e) entfernen.`);
+// Automatischer Tagesabschluss: Bestellungen früherer Tage (Berliner Zeit) ins Archiv, dann löschen.
+// Archiv wird ZUERST geschrieben; schlägt das fehl, wird nichts gelöscht. Fehler hier stoppen die Push-Nachrichten nicht.
+let abschlussFehler = false;
+try {
+  const frisch = await lies("orders");
+  const tage = Object.values(frisch).filter((o) => o && o.zeit && Number.isFinite(Date.parse(o.zeit))).map((o) => tagVon(Date.parse(o.zeit))).sort();
+  if (tage.length && tage[0] < tagVon(jetzt)) {
+    const belegt = Object.keys((await db.ref("archiv/doener").orderByKey().startAt(tage[0]).endAt(tage[tage.length - 1] + String.fromCharCode(63743)).get()).val() || {});
+    const a = planeAbschluss({ orders: frisch, archivSchluessel: belegt, jetzt });
+    console.log(`${PROBE ? "PROBE " : ""}Abschluss: ${a.eintraege.length} Bericht(e) für ${Object.keys(a.loeschen).filter((k) => k.startsWith("orders/")).length} Bestellung(en)${a.zaehlerZuruecksetzen ? ", Nummer zurück auf 1" : ""}.`);
+    if (!PROBE && a.eintraege.length) {
+      for (const e of a.eintraege) await db.ref("archiv/doener/" + e.schluessel).set(e.daten);
+      await db.ref().update({ ...a.loeschen, ...(a.zaehlerZuruecksetzen ? { counter: { nr: 1 } } : {}) });
+    }
+  }
+} catch (e) {
+  abschlussFehler = true;
+  console.error("Abschluss fehlgeschlagen (nichts gelöscht, wenn das Archiv nicht geschrieben wurde):", e.code || e.message);
+}
 console.log(`Döner: ${nachrichten.length} Nachricht(en), ${verschickt} zugestellt, ${kaputt.size} Gerät(e) aufgeräumt.`);
-process.exit(0);
+process.exit(abschlussFehler ? 1 : 0);

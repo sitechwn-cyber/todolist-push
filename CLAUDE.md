@@ -89,3 +89,14 @@ test-doener.mjs`. Merkzettel `push/gesendet/<orderId>` im Döner-Projekt. Eigene
 **`FIREBASE_SERVICE_ACCOUNT_DOENER`** (Dienstkonto-Schlüssel von tekke-55b28); fehlt es,
 wird der Schritt übersprungen (kein Fehler). Lokal: `FIREBASE_SERVICE_ACCOUNT_DOENER_DATEI=<Pfad>
 node sende-doener.mjs --probe`. Schlüsseldatei nie ins Git (`.gitignore` schließt `*.json` aus).
+
+## Döner: automatischer Tagesabschluss um 00:00 (19.10.2026)
+
+`sende-doener.mjs` räumt am Ende jedes Laufs auf (`doener-abschluss.mjs`, Test `test-abschluss.mjs`): Bestellungen von einem
+**früheren Tag** (Berliner Zeit) werden je Tag und Gruppe (ERKEKLER/BAYANLAR) als Bericht nach `archiv/doener/<JJJJ-MM-TT>_0000_<Gruppe>`
+geschrieben (`art: auto`, CSV wie in der App, gleiche Produkte mit Menge und Umsatz zusammengefasst) und danach samt
+`bestellnummern/` gelöscht. Bestellungen von heute bleiben. Der Zähler `counter` geht nur auf 1, wenn danach nichts mehr da ist.
+Das Archiv wird **vor** dem Löschen geschrieben; schlägt es fehl, bleibt alles stehen (Lauf wird rot). Läuft der Wecker um 00:00
+nicht, holt der nächste Lauf es nach. Dienstkonto umgeht die Regeln; die Archiv-Regel (nur Mitarbeiter lesen, nur Neues anlegen)
+liegt in `memba-fleisch\database.rules.json`. Protokoll bleibt öffentlich-tauglich: nur Zahlen. Probelauf: `--probe` zeigt nur an.
+Hochladen: geänderte Dateien (`sende-doener.mjs`, `doener-abschluss.mjs`, `test-abschluss.mjs`) bei GitHub einspielen.
