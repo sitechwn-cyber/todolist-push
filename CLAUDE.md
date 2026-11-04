@@ -103,8 +103,8 @@ Hochladen: geänderte Dateien (`sende-doener.mjs`, `doener-abschluss.mjs`, `test
 
 ## Goldpreise für die Goldmarkt-App (seit 04.11.2026)
 
-`goldpreise/` + `.github/workflows/goldpreise.yml`: alle 15 Min. wird `canlialtinfiyatlari.com/altin/almanya`
-(Tabelle „Almanya Altın €“, Ankauf/Verkauf in Euro) gelesen und als `goldpreise.json` auf den Zweig `daten`
+`goldpreise/` + `.github/workflows/goldpreise.yml`: alle 15 Min. wird `altineuro.com`
+(Tabelle „Altin Fiyatlari Euro“, Ankauf/Verkauf in Euro: Gram, Çeyrek, Yarım, Tam, Gremse, Reşat, Hamit, Cumhuriyet, 22/18/14 Ayar; gegen den Weltmarktpreis gegengeprüft) gelesen und als `goldpreise.json` auf den Zweig `daten`
 geschrieben (je Lauf ein einziger Commit, per Force-Push überschrieben). Lesbar für den Browser unter
 `https://raw.githubusercontent.com/sitechwn-cyber/todolist-push/daten/goldpreise.json`.
 Prüfung `node goldpreise/test.mjs`; schlägt das Lesen fehl (Seite umgebaut, unplausible Zahlen), bleibt der alte Stand stehen

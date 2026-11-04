@@ -1,6 +1,6 @@
 name: Goldpreise holen
 
-# Holt alle 15 Minuten die Almanya-Euro-Goldpreise von canlialtinfiyatlari.com und legt sie als
+# Holt alle 15 Minuten die Euro-Goldpreise (Ankauf/Verkauf) von altineuro.com und legt sie als
 # goldpreise.json auf dem Zweig „daten“ ab (immer nur ein Stand, keine Historie, main bleibt sauber).
 # Die Goldmarkt-App liest: https://raw.githubusercontent.com/sitechwn-cyber/todolist-push/daten/goldpreise.json
 # Schlägt das Lesen fehl (Seite umgebaut, Zahlen unplausibel), bleibt der letzte gute Stand online.
