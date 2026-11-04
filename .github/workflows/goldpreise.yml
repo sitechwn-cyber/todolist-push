@@ -1,0 +1,47 @@
+name: Goldpreise holen
+
+# Holt alle 15 Minuten die Almanya-Euro-Goldpreise von canlialtinfiyatlari.com und legt sie als
+# goldpreise.json auf dem Zweig „daten“ ab (immer nur ein Stand, keine Historie, main bleibt sauber).
+# Die Goldmarkt-App liest: https://raw.githubusercontent.com/sitechwn-cyber/todolist-push/daten/goldpreise.json
+# Schlägt das Lesen fehl (Seite umgebaut, Zahlen unplausibel), bleibt der letzte gute Stand online.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["goldpreise/**", ".github/workflows/goldpreise.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goldpreise
+  cancel-in-progress: false
+
+jobs:
+  holen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Leser prüfen
+        run: node goldpreise/test.mjs
+      - name: Preise holen
+        run: node goldpreise/hole.mjs "$RUNNER_TEMP/goldpreise.json"
+      - name: Auf Zweig „daten“ veröffentlichen
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir _daten
+          cp "$RUNNER_TEMP/goldpreise.json" _daten/
+          cd _daten
+          git init -q -b daten
+          git config user.name "goldpreise-bot"
+          git config user.email "goldpreise-bot@users.noreply.github.com"
+          git add goldpreise.json
+          git commit -q -m "Goldpreise $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" daten

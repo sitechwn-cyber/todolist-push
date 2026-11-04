@@ -100,3 +100,12 @@ Das Archiv wird **vor** dem Löschen geschrieben; schlägt es fehl, bleibt alles
 nicht, holt der nächste Lauf es nach. Dienstkonto umgeht die Regeln; die Archiv-Regel (nur Mitarbeiter lesen, nur Neues anlegen)
 liegt in `memba-fleisch\database.rules.json`. Protokoll bleibt öffentlich-tauglich: nur Zahlen. Probelauf: `--probe` zeigt nur an.
 Hochladen: geänderte Dateien (`sende-doener.mjs`, `doener-abschluss.mjs`, `test-abschluss.mjs`) bei GitHub einspielen.
+
+## Goldpreise für die Goldmarkt-App (seit 04.11.2026)
+
+`goldpreise/` + `.github/workflows/goldpreise.yml`: alle 15 Min. wird `canlialtinfiyatlari.com/altin/almanya`
+(Tabelle „Almanya Altın €“, Ankauf/Verkauf in Euro) gelesen und als `goldpreise.json` auf den Zweig `daten`
+geschrieben (je Lauf ein einziger Commit, per Force-Push überschrieben). Lesbar für den Browser unter
+`https://raw.githubusercontent.com/sitechwn-cyber/todolist-push/daten/goldpreise.json`.
+Prüfung `node goldpreise/test.mjs`; schlägt das Lesen fehl (Seite umgebaut, unplausible Zahlen), bleibt der alte Stand stehen
+und die App fällt auf den Weltmarktpreis zurück. Hat nichts mit der Todolist-Push zu tun; Secrets werden nicht gebraucht.
