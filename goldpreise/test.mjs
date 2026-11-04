@@ -1,20 +1,17 @@
-// Prüft den Leser gegen eine gespeicherte Beispielseite und gegen kaputte Eingaben.
+// Prüft den Leser gegen einen gespeicherten Beispiel-Datenstrom und gegen kaputte Eingaben.
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { parsePreise } from "./parse.mjs";
+import { parseDatenstrom } from "./xetra.mjs";
 
-const html = readFileSync(new URL("./beispiel.html", import.meta.url), "utf8");
-const r = parsePreise(html);
-assert.equal(r.waehrung, "EUR");
-assert.ok(r.preise.gram.a > 10 && r.preise.gram.a < 1000 && r.preise.gram.s >= r.preise.gram.a);
-for (const k of ["ceyrek", "yarim", "tam", "gremse", "resat", "hamit", "cumhuriyet", "a22", "a18", "a14"]) assert.ok(r.preise[k].s > 0, k);
-assert.ok(r.seite_stand.includes("TRS"));
+const text = readFileSync(new URL("./beispiel-xetra.txt", import.meta.url), "utf8");
+const r = parseDatenstrom(text);
+assert.equal(r.last, 115.35);
+assert.equal(r.zeit, "2026-11-04T13:51:00+01:00");
+assert.equal(r.vortag, 112.9);
 
-// Seite umgebaut: Zeile fehlt -> Fehler
-assert.throws(() => parsePreise(html.replaceAll("Çeyrek Altın", "Anders")));
-// Lira-Tabelle statt Euro-Tabelle (Reihenfolge vertauscht) -> Fehler
-const i = html.indexOf("<table"), j = html.indexOf("<table", i + 10);
-if (j > 0) assert.throws(() => parsePreise(html.slice(0, i) + html.slice(j)));
-// Ankauf über Verkauf -> Fehler
-assert.throws(() => parsePreise(html.replace(/(<td id="GRAMEUR_BUY">)[0-9.]+/, "$1999.0")));
-console.log("Goldpreise-Leser: alle Prüfungen ok");
+assert.throws(() => parseDatenstrom("event: x\n\n"));                                             // keine Datenzeile
+assert.throws(() => parseDatenstrom(text.replace("DE000A0S9GB0", "DE0000000000")));              // falsches Papier
+assert.throws(() => parseDatenstrom(text.replace('"lastPrice":115.35', '"lastPrice":11535')));    // unplausibel
+assert.throws(() => parseDatenstrom(text.replace('"EUR"', '"USD"')));                             // Währung
+assert.throws(() => parseDatenstrom(text.replace(/,"timestampLastPrice":"[^"]*"/, "")));          // kein Zeitstempel
+console.log("Xetra-Leser: alle Prüfungen ok");

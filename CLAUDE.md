@@ -103,9 +103,10 @@ Hochladen: geänderte Dateien (`sende-doener.mjs`, `doener-abschluss.mjs`, `test
 
 ## Goldpreise für die Goldmarkt-App (seit 04.11.2026)
 
-`goldpreise/` + `.github/workflows/goldpreise.yml`: alle 15 Min. wird `altineuro.com`
-(Tabelle „Altin Fiyatlari Euro“, Ankauf/Verkauf in Euro: Gram, Çeyrek, Yarım, Tam, Gremse, Reşat, Hamit, Cumhuriyet, 22/18/14 Ayar; gegen den Weltmarktpreis gegengeprüft) gelesen und als `goldpreise.json` auf den Zweig `daten`
-geschrieben (je Lauf ein einziger Commit, per Force-Push überschrieben). Lesbar für den Browser unter
-`https://raw.githubusercontent.com/sitechwn-cyber/todolist-push/daten/goldpreise.json`.
-Prüfung `node goldpreise/test.mjs`; schlägt das Lesen fehl (Seite umgebaut, unplausible Zahlen), bleibt der alte Stand stehen
-und die App fällt auf den Weltmarktpreis zurück. Hat nichts mit der Todolist-Push zu tun; Secrets werden nicht gebraucht.
+`goldpreise/` + `.github/workflows/goldpreise.yml`: alle 15 Min. wird der **Xetra-Gold-Kurs der Deutschen Börse**
+(ISIN DE000A0S9GB0, 1 Stück ≈ 1 g Gold, Euro) über die Schnittstelle der Börse Frankfurt geholt (Datenstrom, erste Zeile `data:`),
+gegen den Weltmarktpreis (±3 %) gegengeprüft und als `goldpreise.json` auf den Zweig `daten` geschrieben (je Lauf ein einziger
+Commit, Force-Push). Lesbar für den Browser unter
+`https://raw.githubusercontent.com/sitechwn-cyber/todolist-push/daten/goldpreise.json` (GitHub-Cache 5 Min.).
+Prüfung `node goldpreise/test.mjs`; schlägt das Lesen fehl, bleibt der alte Stand stehen und die App fällt auf den Weltmarktpreis zurück.
+Die Schnittstelle der Börse ist nicht offiziell dokumentiert – bricht sie, hier `xetra.mjs` anpassen. Hat nichts mit der Todolist-Push zu tun; keine Secrets.

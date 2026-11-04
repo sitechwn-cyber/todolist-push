@@ -1,0 +1,5 @@
+event: x
+
+data:{"changeToPrevDayAbsolute":2.45,"closingPricePrevTradingDay":112.9,"currency":{"originalValue":"EUR"},"dayHigh":115.7,"dayLow":115.2,"isin":"DE000A0S9GB0","lastPrice":115.35,"mic":"XETR","timestampLastPrice":"2026-11-04T13:51:00+01:00"}
+
+data:{"x":1}
