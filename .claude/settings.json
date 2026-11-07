@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node test-doener.mjs)",
+      "Bash(node test-abschluss.mjs)",
+      "Bash(node goldpreise/test.mjs)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/geheimnis-pruefen.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Prüfe auf Schlüssel und Mailadressen…"
+          }
+        ]
+      }
+    ]
+  }
+}
